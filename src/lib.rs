@@ -2,11 +2,12 @@ use burn::backend::NdArrayBackend;
 use fsrs::FSRS;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = Fsrs)]
 pub struct FSRSwasm(FSRS<NdArrayBackend>);
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = Fsrs)]
 impl FSRSwasm {
+    #[wasm_bindgen(js_name = nextInterval)]
     pub fn next_interval(
         &self,
         stability: Option<f32>,
