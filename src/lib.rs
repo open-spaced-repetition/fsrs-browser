@@ -1,14 +1,18 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use burn::backend::NdArrayBackend;
+use fsrs::FSRS;
+use wasm_bindgen::prelude::*;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[wasm_bindgen]
+pub struct FSRSwasm(FSRS<NdArrayBackend>);
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+#[wasm_bindgen]
+impl FSRSwasm {
+    pub fn next_interval(
+        &self,
+        stability: Option<f32>,
+        desired_retention: f32,
+        rating: u32,
+    ) -> u32 {
+        self.0.next_interval(stability, desired_retention, rating)
     }
 }
