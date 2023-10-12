@@ -6,6 +6,11 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+default = ["ndarray"]
+
+ndarray = ["burn/ndarray-no-std"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -23,4 +28,3 @@ rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
 # path = "../burn/burn"
 default-features = false
 features = ["std", "train-minimal", "autodiff", "dataset-minimal", "ndarray"]
-

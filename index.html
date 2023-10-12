@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>FSRS WASM Example</title>
+  </head>
+  <body>
+    <h1>FSRS WASM Example</h1>
+    <button id="memory-state-btn">Calculate Memory State</button>
+    <button id="next-interval-btn">Calculate Next Interval</button>
+
+    <script type="module">
+      import { default as wasm, Fsrs } from "./pkg/fsrs_wasm.js";
+      let fsrs;
+      wasm()
+        .then((module) => {
+          fsrs = new Fsrs();
+        })
+        .catch((error) => {
+          console.error("An error occurred while initializing the WASM module:", error);
+        });
+
+      // Define your button click handlers
+      document.getElementById("memory-state-btn").addEventListener("click", () => {
+        if (fsrs) {
+          const ratings = new Uint32Array([3, 3, 3]);
+          const delta_ts = new Uint32Array([0, 3, 6]);
+          const result = fsrs.memoryState(ratings, delta_ts);
+          console.log("Memory state:", result);
+        }
+      });
+
+      document.getElementById("next-interval-btn").addEventListener("click", () => {
+        if (fsrs) {
+          const stability = 1.5; // or undefined
+          const desired_retention = 0.9;
+          const rating = 3;
+          const result = fsrs.nextInterval(stability, desired_retention, rating);
+          console.log("Next interval:", result);
+        }
+      });
+    </script>
+  </body>
+</html>
