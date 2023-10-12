@@ -7,6 +7,12 @@ pub struct FSRSwasm {
     model: Result<FSRS<NdArrayBackend>>,
 }
 
+impl Default for FSRSwasm {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen(js_class = Fsrs)]
 impl FSRSwasm {
     #[cfg_attr(target_family = "wasm", wasm_bindgen(constructor))]
@@ -17,7 +23,7 @@ impl FSRSwasm {
     }
     #[wasm_bindgen(js_name = memoryState)]
     pub fn memory_state(&self, ratings: Vec<u32>, delta_ts: Vec<u32>) -> Vec<f32> {
-        let reviews: Vec<(u32, u32)> = ratings.into_iter().zip(delta_ts.into_iter()).collect();
+        let reviews: Vec<(u32, u32)> = ratings.into_iter().zip(delta_ts).collect();
         let item = FSRSItem {
             reviews: reviews
                 .into_iter()
