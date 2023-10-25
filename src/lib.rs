@@ -22,12 +22,15 @@ impl FSRSwasm {
         }
     }
     #[wasm_bindgen(js_name = memoryState)]
-    pub fn memory_state(&self, ratings: Vec<u32>, delta_ts: Vec<u32>) -> Vec<f32> {
-        let reviews: Vec<(u32, u32)> = ratings.into_iter().zip(delta_ts).collect();
+    pub fn memory_state(&self, ratings: &[u32], delta_ts: &[u32]) -> Vec<f32> {
         let item = FSRSItem {
-            reviews: reviews
-                .into_iter()
-                .map(|(rating, delta_t)| FSRSReview { rating, delta_t })
+            reviews: ratings
+                .iter()
+                .zip(delta_ts)
+                .map(|(rating, delta_t)| FSRSReview {
+                    rating: *rating,
+                    delta_t: *delta_t,
+                })
                 .collect(),
         };
         let state = self.model.memory_state(item);
