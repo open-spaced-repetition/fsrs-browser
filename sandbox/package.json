@@ -20,6 +20,7 @@
 	"dependencies": {
 		"@popperjs/core": "^2.11.8",
 		"bootstrap": "^5.3.2",
+		"fsrs-wasm": "link:../pkg",
 		"solid-js": "^1.8.3"
 	}
 }
