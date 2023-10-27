@@ -13,6 +13,10 @@ export default defineConfig({
 	],
 	server: {
 		port: 3000,
+		fs: {
+			// Allow serving files from one level up to the project root
+			allow: ['..'],
+		},
 	},
 	build: {
 		target: 'esnext',
