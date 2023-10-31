@@ -8,6 +8,18 @@ const App: Component = () => {
 			<h1>FSRS WASM Example</h1>
 			<button
 				onClick={() => {
+					Error.stackTraceLimit = 20
+					const deltaTs = new Uint32Array([0, 0, 0, 4, 4, 0, 2, 3, 0, 0])
+					const ratings = new Uint32Array([3, 3, 3, 3, 1, 3, 4, 3, 3, 3])
+					const lengths = new Uint32Array([8, 2])
+					const result = fsrs().computeWeights(ratings, deltaTs, lengths)
+					console.log('Compute weights', result)
+				}}
+			>
+				Compute Weights
+			</button>
+			<button
+				onClick={() => {
 					const ratings = new Uint32Array([3, 3, 3])
 					const delta_ts = new Uint32Array([0, 3, 6])
 					const result = fsrs().memoryState(ratings, delta_ts)
