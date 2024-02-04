@@ -1,5 +1,7 @@
 use burn::backend::NdArrayBackend;
 use fsrs::{FSRSError, FSRSItem, FSRSReview, DEFAULT_WEIGHTS, FSRS};
+use log::info;
+use log::Level;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 extern crate console_error_panic_hook;
@@ -39,6 +41,7 @@ impl FSRSwasm {
     #[cfg_attr(target_family = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Self {
         console_error_panic_hook::set_once();
+        console_log::init_with_level(Level::Debug);
         Self {
             model: FSRS::new(Some(&DEFAULT_WEIGHTS)).unwrap(),
         }
@@ -102,7 +105,7 @@ impl FSRSwasm {
                 })
                 .collect(),
         };
-        let state = self.model.memory_state(item);
+        let state = self.model.memory_state(item, None);
         vec![state.stability, state.difficulty]
     }
 

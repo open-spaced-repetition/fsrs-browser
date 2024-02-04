@@ -13,15 +13,22 @@ wasm-bindgen = "0.2.87"
 getrandom = { version = "0.2", features = ["js"] }
 web-sys = {version = "0.3.64", features = ["console"]}
 console_error_panic_hook = "0.1.7"
+console_log = { version = "0.2", features = ["color"] }
+log = "0.4"
 
 [dependencies.fsrs]
-git = "https://github.com/open-spaced-repetition/fsrs-rs.git"
-rev = "5d67e1c0c82e56b49e3c9b3403da4ce703823b5f"
+path = "../fsrs-rs"
+# git = "https://github.com/open-spaced-repetition/fsrs-rs.git"
+# rev = "aa797b950375d5f5be1cddacd5f9b85416fd8e0f"
+# features = ["burn/wasm-sync"]
 
 [dependencies.burn]
 # version = "0.10.0"
-git = "https://github.com/burn-rs/burn.git"
-rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
-# path = "../burn/burn"
+# git = "https://github.com/burn-rs/burn.git"
+# rev = "9f2bc599b880f069cc5f1ede21c69554adf3ee1e"
+path = "../burn/burn/"
 default-features = false
-features = ["std", "train-minimal", "autodiff", "dataset-minimal", "ndarray"]
+features = ["train-minimal", "autodiff", "dataset-minimal", "ndarray", "wasm-sync"]
+
+[dependencies.libm]
+version = "0.2.8"
