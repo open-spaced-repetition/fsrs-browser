@@ -18,6 +18,8 @@ jobs:
 
     - name: Check out
       uses: actions/checkout@v3
+      with:
+        submodules: true
 
     - name: Install Rust nightly
       uses: dtolnay/rust-toolchain@master
