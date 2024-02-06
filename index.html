@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>FSRS WASM Example</title>
+    <title>FSRS Browser Example</title>
   </head>
   <body>
-    <h1>FSRS WASM Example</h1>
+    <h1>FSRS Browser Example</h1>
     <button id="memory-state-btn">Calculate Memory State</button>
     <button id="next-interval-btn">Calculate Next Interval</button>
 
     <script type="module">
-      import { default as wasm, Fsrs } from "./pkg/fsrs_wasm.js";
+      import { default as wasm, Fsrs } from "./pkg/fsrs_browser.js";
       let fsrs;
       wasm()
         .then((module) => {

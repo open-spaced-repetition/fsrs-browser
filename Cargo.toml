@@ -1,5 +1,5 @@
 [package]
-name = "fsrs-wasm"
+name = "fsrs-browser"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,1 +1,1 @@
-# fsrs-wasm
+# fsrs-browser

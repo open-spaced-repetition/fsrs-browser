@@ -1,11 +1,11 @@
 import { createResource, type Component } from 'solid-js'
-import init, { Fsrs } from 'fsrs-wasm/fsrs_wasm'
+import init, { Fsrs } from 'fsrs-browser/fsrs_browser'
 
 const App: Component = () => {
 	let [fsrs] = createResource(() => init().then(() => new Fsrs()))
 	return (
 		<>
-			<h1>FSRS WASM Example</h1>
+			<h1>FSRS Browser Example</h1>
 			<button
 				onClick={() => {
 					const ratings = new Uint32Array([3, 3, 3])
