@@ -9,17 +9,18 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-wasm-bindgen = "0.2.87"
+wasm-bindgen = "0.2.90"
 getrandom = { version = "0.2", features = ["js"] }
 
 [dependencies.fsrs]
-git = "https://github.com/open-spaced-repetition/fsrs-rs.git"
-rev = "5d67e1c0c82e56b49e3c9b3403da4ce703823b5f"
+path = "./fsrs-rs"
+# git = "https://github.com/open-spaced-repetition/fsrs-rs.git"
+# rev = "5d67e1c0c82e56b49e3c9b3403da4ce703823b5f"
 
 [dependencies.burn]
 # version = "0.10.0"
-git = "https://github.com/burn-rs/burn.git"
-rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
-# path = "../burn/burn"
+# git = "https://github.com/burn-rs/burn.git"
+# rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
+path = "./burn/burn"
 default-features = false
-features = ["std", "train-minimal", "autodiff", "dataset-minimal", "ndarray"]
+features = ["std", "train", "autodiff", "wasm-sync", "browser", "ndarray"]

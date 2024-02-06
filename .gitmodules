@@ -1,0 +1,6 @@
+[submodule "fsrs-rs"]
+	path = fsrs-rs
+	url = https://github.com/AlexErrant/fsrs-rs.git
+[submodule "burn"]
+	path = burn
+	url = https://github.com/AlexErrant/burn.git
