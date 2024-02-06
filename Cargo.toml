@@ -13,6 +13,8 @@ wasm-bindgen = "0.2.90"
 getrandom = { version = "0.2", features = ["js"] }
 web-sys = {version = "0.3.64", features = ["console"]}
 console_error_panic_hook = "0.1.7"
+console_log = { version = "0.2", features = ["color"] }
+log = "0.4"
 
 [dependencies.fsrs]
 path = "./fsrs-rs"
@@ -26,3 +28,6 @@ path = "./fsrs-rs"
 path = "./burn/burn"
 default-features = false
 features = ["std", "train", "autodiff", "wasm-sync", "browser", "ndarray"]
+
+[dependencies.libm]
+version = "0.2.8"
