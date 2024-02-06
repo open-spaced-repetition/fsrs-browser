@@ -1,10 +1,10 @@
-use burn::backend::NdArrayBackend;
+use burn::backend::NdArray;
 use fsrs::{FSRSItem, FSRSReview, DEFAULT_WEIGHTS, FSRS};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_name = Fsrs)]
 pub struct FSRSwasm {
-    model: FSRS<NdArrayBackend>,
+    model: FSRS<NdArray>,
 }
 
 impl Default for FSRSwasm {
@@ -33,7 +33,7 @@ impl FSRSwasm {
                 })
                 .collect(),
         };
-        let state = self.model.memory_state(item);
+        let state = self.model.memory_state(item, None).unwrap();
         vec![state.stability, state.difficulty]
     }
     #[wasm_bindgen(js_name = nextInterval)]
