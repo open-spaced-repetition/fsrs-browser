@@ -1,4 +1,5 @@
 use burn::backend::NdArray;
+use fsrs::FSRSError;
 use fsrs::{FSRSItem, FSRSReview, DEFAULT_WEIGHTS, FSRS};
 use log::info;
 use log::Level;
@@ -85,11 +86,13 @@ impl FSRSwasm {
 
         // log::info!("what {:?}", items);
         self.model
-            .compute_weights(items, None)
+            .compute_weights(items, false, None)
             .map_err(|e| match e {
                 FSRSError::Interrupted => String::from("Interrupted"),
                 FSRSError::NotEnoughData => String::from("NotEnoughData"),
                 FSRSError::InvalidWeights => String::from("InvalidWeights"),
+                FSRSError::InvalidInput => String::from("InvalidInput"),
+                FSRSError::OptimalNotFound => String::from("OptimalNotFound"),
             })
     }
 
