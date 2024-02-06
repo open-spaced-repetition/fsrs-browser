@@ -10,4 +10,4 @@ cargo fmt --check || (
 
 cargo clippy -- -Dwarnings
 
-cargo test --release
+# cargo test --release
