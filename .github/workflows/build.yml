@@ -26,6 +26,7 @@ jobs:
       with:
         toolchain: nightly-2023-07-01
         components: rustfmt,clippy
+        targets: wasm32-unknown-unknown
 
     - name: Set up cargo cache
       uses: actions/cache@v3
