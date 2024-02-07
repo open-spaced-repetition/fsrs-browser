@@ -1,5 +1,5 @@
 use burn::backend::NdArray;
-use fsrs::{FSRSItem, FSRSReview, DEFAULT_WEIGHTS, FSRS};
+use fsrs::{anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, DEFAULT_WEIGHTS, FSRS};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_name = Fsrs)]
@@ -21,6 +21,28 @@ impl FSRSwasm {
             model: FSRS::new(Some(&DEFAULT_WEIGHTS)).unwrap(),
         }
     }
+
+    #[wasm_bindgen(js_name = computeWeights)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn compute_weights(
+        &self,
+        cids: &[i64],
+        eases: &[u8],
+        factors: &[u32],
+        ids: &[i64],
+        ivls: &[i32],
+        last_ivls: &[i32],
+        times: &[u32],
+        types: &[u8],
+        usns: &[i32],
+    ) -> Vec<f32> {
+        let revlog_entries = to_revlog_entry(
+            cids, eases, factors, ids, ivls, last_ivls, times, types, usns,
+        );
+        let items = anki_to_fsrs(revlog_entries);
+        self.model.compute_weights(items, false, None).unwrap()
+    }
+
     #[wasm_bindgen(js_name = memoryState)]
     pub fn memory_state(&self, ratings: &[u32], delta_ts: &[u32]) -> Vec<f32> {
         let item = FSRSItem {

@@ -1,10 +1,11 @@
 import { createResource, type Component } from 'solid-js'
 import init, { Fsrs } from 'fsrs-browser/fsrs_browser'
+import Train from './train.ts?worker'
 
 const App: Component = () => {
 	let [fsrs] = createResource(() => init().then(() => new Fsrs()))
 	return (
-		<>
+		<div style={{ display: 'flex', 'flex-direction': 'column' }}>
 			<h1>FSRS Browser Example</h1>
 			<button
 				onClick={() => {
@@ -31,8 +32,40 @@ const App: Component = () => {
 			>
 				Calculate Next Interval
 			</button>
-		</>
+			<button
+				onclick={() => {
+					new Train().postMessage('autotrain')
+				}}
+			>
+				Train with example file
+			</button>
+			<label>
+				Train with custom file
+				<input type='file' onChange={customFile} accept='.anki21' />
+			</label>
+		</div>
 	)
 }
 
+async function customFile(
+	event: Event & {
+		currentTarget: HTMLInputElement
+		target: HTMLInputElement
+	},
+): Promise<void> {
+	const file =
+		// My mental static analysis says to use `currentTarget`, but it seems to randomly be null, hence `target`. I'm confused but whatever.
+		event.target.files?.item(0) ?? throwExp('There should be a file selected')
+	let ab = await file.arrayBuffer()
+	new Train().postMessage(ab, [ab])
+}
+
 export default App
+
+// https://stackoverflow.com/a/65666402
+export function throwExp(error: unknown): never {
+	if (typeof error === 'string') {
+		throw new Error(error)
+	}
+	throw error
+}
