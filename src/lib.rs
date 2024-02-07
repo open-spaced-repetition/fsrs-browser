@@ -36,6 +36,7 @@ impl FSRSwasm {
         let state = self.model.memory_state(item, None).unwrap();
         vec![state.stability, state.difficulty]
     }
+
     #[wasm_bindgen(js_name = nextInterval)]
     pub fn next_interval(
         &self,
@@ -46,4 +47,10 @@ impl FSRSwasm {
         self.model
             .next_interval(stability, desired_retention, rating)
     }
+}
+
+#[wasm_bindgen(start)]
+pub fn start() {
+    console_error_panic_hook::set_once();
+    console_log::init().expect("Error initializing logger");
 }

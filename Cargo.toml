@@ -9,6 +9,9 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+console_error_panic_hook = "0.1.7"
+console_log = { version = "1" }
+log = { default-features = false, version = "0.4.20" }
 wasm-bindgen = "0.2.90"
 getrandom = { version = "0.2", features = ["js"] }
 
