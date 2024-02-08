@@ -6,7 +6,8 @@
 		"start": "vite",
 		"dev": "vite",
 		"build": "vite build",
-		"serve": "vite preview"
+		"serve": "vite preview",
+		"postinstall": "./postinstall.sh"
 	},
 	"license": "MIT",
 	"devDependencies": {
