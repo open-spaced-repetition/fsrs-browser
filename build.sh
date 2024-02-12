@@ -13,8 +13,9 @@ fi
 
 # Set optimization flags
 if [[ $1 == "release" ]]; then
-	export RUSTFLAGS="-C lto=fat -C embed-bitcode=yes -C codegen-units=1 -C opt-level=3 --cfg web_sys_unstable_apis"
+	echo "Building in 'release' mode"
 else
+	echo "Building in 'dev' mode"
 	# sets $1 to "dev"
 	set -- dev
 fi

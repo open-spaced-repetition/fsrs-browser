@@ -27,3 +27,7 @@ path = "./fsrs-rs"
 path = "./burn/burn"
 default-features = false
 features = ["std", "train", "autodiff", "wasm-sync", "browser", "ndarray"]
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
