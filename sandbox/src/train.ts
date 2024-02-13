@@ -23,6 +23,7 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
 	await wasm()
 	await initThreadPool(navigator.hardwareConcurrency)
 	await sleep(1000) // the workers need time to spin up. TODO, post an init message and await a response. Also maybe move worker construction to Javascript.
+	console.time('full training time')
 	let fsrs = new Fsrs()
 	const db = await getDb(ab)
 	let baseQuery = `FROM revlog
@@ -77,7 +78,9 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
 			types,
 			usns,
 		)
+		console.timeEnd('full training time')
 		console.log('trained weights are', weights)
+		console.log('revlog count', count)
 	} finally {
 		db.close()
 	}
