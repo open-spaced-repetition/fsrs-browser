@@ -1,6 +1,7 @@
 import { createResource, type Component } from 'solid-js'
 import init, { Fsrs } from 'fsrs-browser/fsrs_browser'
 import Train from './train.ts?worker'
+import { testSerialization } from './testSerialization'
 
 const App: Component = () => {
 	let [fsrs] = createResource(() => init().then(() => new Fsrs()))
@@ -43,6 +44,7 @@ const App: Component = () => {
 				Train with custom file
 				<input type='file' onChange={customFile} accept='.anki21' />
 			</label>
+			<button onclick={testSerialization}>Test Serialization</button>
 		</div>
 	)
 }
