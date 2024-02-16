@@ -1,5 +1,5 @@
 use burn::backend::NdArray;
-use fsrs::{anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, DEFAULT_WEIGHTS, FSRS};
+use fsrs::{anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, FSRS};
 use log::info;
 use wasm_bindgen::prelude::*;
 
@@ -10,16 +10,16 @@ pub struct FSRSwasm {
 
 impl Default for FSRSwasm {
     fn default() -> Self {
-        Self::new()
+        Self::new(None)
     }
 }
 
 #[wasm_bindgen(js_class = Fsrs)]
 impl FSRSwasm {
     #[cfg_attr(target_family = "wasm", wasm_bindgen(constructor))]
-    pub fn new() -> Self {
+    pub fn new(weights: Option<Vec<f32>>) -> Self {
         Self {
-            model: FSRS::new(Some(&DEFAULT_WEIGHTS)).unwrap(),
+            model: FSRS::new(weights.as_deref()).unwrap(),
         }
     }
 
