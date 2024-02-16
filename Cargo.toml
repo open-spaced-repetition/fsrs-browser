@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1" }
 log = { default-features = false, version = "0.4.20" }
-wasm-bindgen = "0.2.90"
+wasm-bindgen = "0.2.91"
 getrandom = { version = "0.2", features = ["js"] }
 
 [dependencies.fsrs]
