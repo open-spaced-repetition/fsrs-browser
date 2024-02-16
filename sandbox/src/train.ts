@@ -67,7 +67,7 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
 			i++
 		}
 		trainQuery.free()
-		let weights = fsrs.computeWeights(
+		let weights = fsrs.computeWeightsAnki(
 			cids,
 			eases,
 			factors,
