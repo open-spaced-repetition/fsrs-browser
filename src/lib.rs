@@ -29,17 +29,10 @@ impl FSRSwasm {
         &mut self,
         cids: &[i64],
         eases: &[u8],
-        factors: &[u32],
         ids: &[i64],
-        ivls: &[i32],
-        last_ivls: &[i32],
-        times: &[u32],
         types: &[u8],
-        usns: &[i32],
     ) -> Vec<f32> {
-        let revlog_entries = to_revlog_entry(
-            cids, eases, factors, ids, ivls, last_ivls, times, types, usns,
-        );
+        let revlog_entries = to_revlog_entry(cids, eases, ids, types);
         let items = anki_to_fsrs(revlog_entries);
         self.train_and_set_weights(items)
     }
