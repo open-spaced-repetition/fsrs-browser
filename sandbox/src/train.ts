@@ -34,6 +34,8 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
         FROM cards
         WHERE queue != 0
     )
+    AND (type <> 4 AND ease <> 0)
+    AND (type <> 3 OR  factor <> 0)
     order by cid`
 	try {
 		const countQuery = db.prepare(`SELECT count(*) ${baseQuery}`)
@@ -45,39 +47,19 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
 		let i = 0
 		const cids = new BigInt64Array(count)
 		const eases = new Uint8Array(count)
-		const factors = new Uint32Array(count)
 		const ids = new BigInt64Array(count)
-		const ivls = new Int32Array(count)
-		const lastIvls = new Int32Array(count)
-		const times = new Uint32Array(count)
 		const types = new Uint8Array(count)
-		const usns = new Int32Array(count)
 		const trainQuery = db.prepare(`SELECT * ${baseQuery}`)
 		while (trainQuery.step()) {
 			const row = trainQuery.getAsObject()
 			cids[i] = BigInt(row.cid as number)
 			eases[i] = row.ease as number
-			factors[i] = row.factor as number
 			ids[i] = BigInt(row.id as number)
-			ivls[i] = row.ivl as number
-			lastIvls[i] = row.lastIvl as number
-			times[i] = row.time as number
 			types[i] = row.type as number
-			usns[i] = row.usn as number
 			i++
 		}
 		trainQuery.free()
-		let weights = fsrs.computeWeightsAnki(
-			cids,
-			eases,
-			factors,
-			ids,
-			ivls,
-			lastIvls,
-			times,
-			types,
-			usns,
-		)
+		let weights = fsrs.computeWeightsAnki(cids, eases, ids, types)
 		console.timeEnd('full training time')
 		console.log('trained weights are', weights)
 		console.log('revlog count', count)
