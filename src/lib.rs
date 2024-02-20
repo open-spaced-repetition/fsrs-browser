@@ -55,6 +55,12 @@ impl FSRSwasm {
 
     #[wasm_bindgen(js_name = memoryState)]
     pub fn memory_state(&self, ratings: &[u32], delta_ts: &[u32]) -> Vec<f32> {
+        assert!(
+            ratings.len() == delta_ts.len(),
+            "`ratings` has {} elements and `delta_ts` has {} elements, but they should be equal in size.",
+            ratings.len(),
+            delta_ts.len(),
+        );
         let item = FSRSItem {
             reviews: ratings
                 .iter()
@@ -65,8 +71,28 @@ impl FSRSwasm {
                 })
                 .collect(),
         };
+        self._memory_state(item)
+    }
+
+    fn _memory_state(&self, item: FSRSItem) -> Vec<f32> {
         let state = self.model.memory_state(item, None).unwrap();
         vec![state.stability, state.difficulty]
+    }
+
+    #[wasm_bindgen(js_name = memoryStateAnki)]
+    pub fn memory_state_anki(
+        &self,
+        cids: &[i64],
+        eases: &[u8],
+        ids: &[i64],
+        types: &[u8],
+    ) -> Vec<f32> {
+        let revlog_entries = to_revlog_entry(cids, eases, ids, types);
+        let items = anki_to_fsrs(revlog_entries);
+        let len = items.len();
+        assert_eq!(len, 1, "Expected 1 card, but was given {}", len);
+        let item = items.into_iter().next().unwrap();
+        self._memory_state(item)
     }
 
     #[wasm_bindgen(js_name = nextInterval)]
