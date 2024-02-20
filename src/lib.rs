@@ -1,5 +1,5 @@
 use burn::backend::NdArray;
-use fsrs::{anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, FSRS};
+use fsrs::{anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, MemoryState, NextStates, FSRS};
 use log::info;
 use wasm_bindgen::prelude::*;
 
@@ -78,6 +78,25 @@ impl FSRSwasm {
     ) -> u32 {
         self.model
             .next_interval(stability, desired_retention, rating)
+    }
+
+    #[wasm_bindgen(js_name = nextStates)]
+    pub fn next_states(
+        &self,
+        stability: Option<f32>,
+        difficulty: Option<f32>,
+        desired_retention: f32,
+        days_elapsed: u32,
+    ) -> NextStates {
+        let current_memory_state = stability.and_then(|stability| {
+            difficulty.map(|difficulty| MemoryState {
+                stability,
+                difficulty,
+            })
+        });
+        self.model
+            .next_states(current_memory_state, desired_retention, days_elapsed)
+            .unwrap()
     }
 
     // Deserialization is done here.
