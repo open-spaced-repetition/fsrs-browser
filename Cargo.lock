@@ -760,6 +760,7 @@ dependencies = [
  "serde",
  "snafu",
  "strum",
+ "wasm-bindgen",
 ]
 
 [[package]]
