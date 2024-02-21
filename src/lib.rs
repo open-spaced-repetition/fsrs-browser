@@ -3,7 +3,7 @@ use fsrs::{
     anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, MemoryState, NextStates, DEFAULT_WEIGHTS,
     FSRS,
 };
-use log::info;
+use log::{info, warn};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_name = Fsrs)]
@@ -54,6 +54,8 @@ impl FSRSwasm {
     }
 
     fn train_and_set_weights(&mut self, items: Vec<FSRSItem>) -> Vec<f32> {
+        #[cfg(debug_assertions)]
+        warn!("You're training with a debug build... this is going to take a *long* time.");
         let weights = self.model.compute_weights(items, false, None).unwrap();
         self.model = FSRS::new(Some(&weights)).unwrap();
         weights
