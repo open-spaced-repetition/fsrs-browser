@@ -21,15 +21,12 @@ impl Default for FSRSwasm {
 impl FSRSwasm {
     #[cfg_attr(target_family = "wasm", wasm_bindgen(constructor))]
     pub fn new(weights: Option<Vec<f32>>) -> Self {
-        if let Some(weights) = weights {
-            Self {
-                model: FSRS::new(Some(&weights)).unwrap(),
-            }
-        } else {
-            Self {
-                model: FSRS::new(Some(&DEFAULT_WEIGHTS)).unwrap(),
-            }
+        let model = match weights {
+            Some(weights) => FSRS::new(Some(&weights)),
+            None => FSRS::new(Some(&DEFAULT_WEIGHTS)),
         }
+        .unwrap();
+        Self { model }
     }
 
     #[wasm_bindgen(js_name = computeWeightsAnki)]
