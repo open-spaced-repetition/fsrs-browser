@@ -1,5 +1,8 @@
 use burn::backend::NdArray;
-use fsrs::{anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, MemoryState, NextStates, FSRS};
+use fsrs::{
+    anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, MemoryState, NextStates, DEFAULT_WEIGHTS,
+    FSRS,
+};
 use log::info;
 use wasm_bindgen::prelude::*;
 
@@ -18,8 +21,14 @@ impl Default for FSRSwasm {
 impl FSRSwasm {
     #[cfg_attr(target_family = "wasm", wasm_bindgen(constructor))]
     pub fn new(weights: Option<Vec<f32>>) -> Self {
-        Self {
-            model: FSRS::new(weights.as_deref()).unwrap(),
+        if let Some(weights) = weights {
+            Self {
+                model: FSRS::new(Some(&weights)).unwrap(),
+            }
+        } else {
+            Self {
+                model: FSRS::new(Some(&DEFAULT_WEIGHTS)).unwrap(),
+            }
         }
     }
 
