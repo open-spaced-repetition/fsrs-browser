@@ -62,6 +62,7 @@ impl FSRSwasm {
     }
 
     #[wasm_bindgen(js_name = memoryState)]
+    /// Returns an array of 2 elements: `[stability, difficulty]`
     pub fn memory_state(&self, ratings: &[u32], delta_ts: &[u32]) -> Vec<f32> {
         assert!(
             ratings.len() == delta_ts.len(),
@@ -88,6 +89,7 @@ impl FSRSwasm {
     }
 
     #[wasm_bindgen(js_name = memoryStateAnki)]
+    /// Returns an array of 2 elements: `[stability, difficulty]`
     pub fn memory_state_anki(
         &self,
         cids: &[i64],
