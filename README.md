@@ -1,3 +1,5 @@
+[![NPM Version](https://img.shields.io/npm/v/fsrs-browser.svg?style=flat)]()
+
 # fsrs-browser
 
 This project runs [fsrs-rs](https://github.com/open-spaced-repetition/fsrs-rs) in the browser with support for training FSRS parameters.
