@@ -1,4 +1,4 @@
-[![NPM Version](https://img.shields.io/npm/v/fsrs-browser.svg?style=flat)]()
+[![NPM Version](https://img.shields.io/npm/v/fsrs-browser.svg?style=flat)](https://www.npmjs.com/package/fsrs-browser)
 
 # fsrs-browser
 
