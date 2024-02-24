@@ -92,16 +92,23 @@ impl FSRSwasm {
     /// Returns an array of 2 elements: `[stability, difficulty]`
     pub fn memory_state_anki(
         &self,
-        cids: &[i64],
+        cids: &mut [i64],
         eases: &[u8],
         ids: &[i64],
         types: &[u8],
     ) -> Vec<f32> {
-        let revlog_entries = to_revlog_entry(cids, eases, ids, types);
-        let items = anki_to_fsrs(revlog_entries);
-        let len = items.len();
+        // https://www.reddit.com/r/rust/comments/b4cxrj/how_to_count_number_of_unique_items_in_an_array/ej8kp2y/
+        cids.sort();
+        let len = if cids.is_empty() {
+            0
+        } else {
+            1 + cids.windows(2).filter(|win| win[0] != win[1]).count()
+        };
         assert_eq!(len, 1, "Expected 1 card, but was given {}", len);
-        let item = items.into_iter().next().unwrap();
+
+        let revlog_entries = to_revlog_entry(cids, eases, ids, types);
+        let mut items = anki_to_fsrs(revlog_entries);
+        let item = items.pop().unwrap();
         self._memory_state(item)
     }
 
