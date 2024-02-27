@@ -1,6 +1,7 @@
 import wasm, { initThreadPool, Fsrs } from 'fsrs-browser/fsrs_browser'
 import initSqlJs, { type Database } from 'sql.js'
 import sqliteWasmUrl from './assets/sql-wasm.wasm?url'
+import * as papa from "papaparse";
 
 // @ts-ignore https://github.com/rustwasm/console_error_panic_hook#errorstacktracelimit
 Error.stackTraceLimit = 30
@@ -9,14 +10,16 @@ const sqlJs = initSqlJs({
 	locateFile: () => sqliteWasmUrl,
 })
 
-export const train = async (event: { data: 'autotrain' | ArrayBuffer }) => {
+export const train = async (event: { data: 'autotrain' | ArrayBuffer | File }) => {
 	if (event.data === 'autotrain') {
 		let db = await fetch('/collection.anki21')
 		let ab = await db.arrayBuffer()
 		loadSqliteAndRun(ab)
 	} else if (event.data instanceof ArrayBuffer) {
 		loadSqliteAndRun(event.data)
-	}
+    } else if (event.data instanceof File) {
+        csvTrain(event.data)
+    }
 }
 
 async function loadSqliteAndRun(ab: ArrayBuffer) {
@@ -66,6 +69,64 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
 	} finally {
 		db.close()
 	}
+}
+
+
+// use the csv file to train the model
+// dataset: https://github.com/open-spaced-repetition/fsrs4anki/issues/450
+interface ParseData {
+    review_time: string,
+    card_id: string,
+    review_rating: string,
+    review_duration: string,
+    review_state: string
+}
+
+interface csvTrainDataItem {
+    card_id: bigint,
+    review_time: bigint,
+    review_state: number,
+    review_rating: number
+}
+async function csvTrain(csv: File) {
+    await wasm()
+    await initThreadPool(navigator.hardwareConcurrency)
+    await sleep(1000) // the workers need time to spin up. TODO, post an init message and await a response. Also maybe move worker construction to Javascript.
+    console.time('full training time')
+    const result: csvTrainDataItem[] = [];
+    const fsrs = new Fsrs()
+    papa.parse<ParseData>(csv, {
+        header: true,
+        delimiter: ",",
+        step: function (row) {
+            const data = row.data;
+            if (data.card_id === undefined) return;
+            result.push({
+                card_id: BigInt(data.card_id),
+                review_time: BigInt(data.review_time),
+                review_state: Number(data.review_state),
+                review_rating: Number(data.review_rating),
+            });
+        },
+        complete: function (_) {
+            const cids: BigInt64Array = new BigInt64Array([
+                ...result.map((r) => r.card_id),
+            ]);
+            const eases: Uint8Array = new Uint8Array([
+                ...result.map((r) => r.review_rating),
+            ]);
+            const ids: BigInt64Array = new BigInt64Array([
+                ...result.map((r) => r.review_time),
+            ]);
+            const types: Uint8Array = new Uint8Array([
+                ...result.map((r) => r.review_state),
+            ]);
+            const weights = fsrs.computeWeightsAnki(cids, eases, ids, types)
+            console.timeEnd('full training time')
+            console.log('trained weights are', weights)
+            console.log('revlog count', result.length)
+        },
+    });
 }
 
 async function getDb(ab: ArrayBuffer): Promise<Database> {

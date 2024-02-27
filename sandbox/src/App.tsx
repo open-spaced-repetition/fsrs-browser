@@ -42,7 +42,7 @@ const App: Component = () => {
 			</button>
 			<label>
 				Train with custom file
-				<input type='file' onChange={customFile} accept='.anki21' />
+				<input type='file' onChange={customFile} accept='.anki21, .csv'/>
 			</label>
 			<button onclick={testSerialization}>
 				<div>Test Serialization</div>
@@ -62,7 +62,12 @@ async function customFile(
 		// My mental static analysis says to use `currentTarget`, but it seems to randomly be null, hence `target`. I'm confused but whatever.
 		event.target.files?.item(0) ?? throwExp('There should be a file selected')
 	let ab = await file.arrayBuffer()
-	train({ data: ab })
+	if (file.name.endsWith('.csv')) {
+		train({data: file})
+	} else {
+		train({data: ab})
+	}
+
 }
 
 export default App
