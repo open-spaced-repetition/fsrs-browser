@@ -28,6 +28,9 @@ devDependencies:
   '@types/sql.js':
     specifier: ^1.4.9
     version: 1.4.9
+  '@types/surma__rollup-plugin-off-main-thread':
+    specifier: ^2.2.3
+    version: 2.2.3
   prettier:
     specifier: ^3.2.5
     version: 3.2.5
@@ -867,6 +870,12 @@ packages:
     dependencies:
       '@types/emscripten': 1.39.10
       '@types/node': 20.11.20
+    dev: true
+
+  /@types/surma__rollup-plugin-off-main-thread@2.2.3:
+    resolution: {integrity: sha512-Z9ZbOB+zCKqGpR+/LOYykvOJzLKMAvHkeE0w5GwNZQOCJ/Nw+1gZU40ySiTAbhzQXQtAWs7lvLnOmN38CRGQaA==}
+    dependencies:
+      rollup: 4.12.0
     dev: true
 
   /ansi-styles@3.2.1:
