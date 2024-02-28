@@ -44,7 +44,10 @@ const App: Component = () => {
 				Train with custom file
 				<input type='file' onChange={customFile} accept='.anki21' />
 			</label>
-			<button onclick={testSerialization}>Test Serialization</button>
+			<button onclick={testSerialization}>
+				<div>Test Serialization</div>
+				<div>(fails if fsrs-browser was built in release mode)</div>
+			</button>
 		</div>
 	)
 }
