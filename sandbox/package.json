@@ -11,6 +11,7 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
+		"@surma/rollup-plugin-off-main-thread": "^2.2.3",
 		"@types/sql.js": "^1.4.9",
 		"prettier": "^3.2.5",
 		"sass": "^1.71.1",
