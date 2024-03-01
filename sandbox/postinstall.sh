@@ -5,4 +5,3 @@ cp ./node_modules/sql.js/dist/sql-wasm.wasm ./src/assets/sql-wasm.wasm
 mkdir -p ./public/
 wget -nc -O ./public/collection.anki21.zip https://github.com/open-spaced-repetition/fsrs-optimizer-burn/files/12394182/collection.anki21.zip
 unzip -n ./public/collection.anki21.zip -d ./public
-wget -nc -O ./public/revlog.csv https://github.com/open-spaced-repetition/fsrs4anki/files/12515294/revlog.csv
