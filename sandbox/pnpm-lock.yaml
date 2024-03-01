@@ -14,6 +14,9 @@ dependencies:
   fsrs-browser:
     specifier: link:../pkg
     version: link:../pkg
+  papaparse:
+    specifier: ^5.4.1
+    version: 5.4.1
   solid-js:
     specifier: ^1.8.15
     version: 1.8.15
@@ -25,6 +28,9 @@ devDependencies:
   '@surma/rollup-plugin-off-main-thread':
     specifier: ^2.2.3
     version: 2.2.3
+  '@types/papaparse':
+    specifier: ^5.3.14
+    version: 5.3.14
   '@types/sql.js':
     specifier: ^1.4.9
     version: 1.4.9
@@ -865,6 +871,12 @@ packages:
       undici-types: 5.26.5
     dev: true
 
+  /@types/papaparse@5.3.14:
+    resolution: {integrity: sha512-LxJ4iEFcpqc6METwp9f6BV6VVc43m6MfH0VqFosHvrUgfXiFe6ww7R3itkOQ+TCK6Y+Iv/+RnnvtRZnkc5Kc9g==}
+    dependencies:
+      '@types/node': 20.11.20
+    dev: true
+
   /@types/sql.js@1.4.9:
     resolution: {integrity: sha512-ep8b36RKHlgWPqjNG9ToUrPiwkhwh0AEzy883mO5Xnd+cL6VBH1EvSjBAAuxLUFF2Vn/moE3Me6v9E1Lo+48GQ==}
     dependencies:
@@ -1615,6 +1627,10 @@ packages:
       has-symbols: 1.0.3
       object-keys: 1.1.1
     dev: true
+
+  /papaparse@5.4.1:
+    resolution: {integrity: sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw==}
+    dev: false
 
   /picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}

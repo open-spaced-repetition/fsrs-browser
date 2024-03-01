@@ -1,30 +1,27 @@
 import wasm, { initThreadPool, Fsrs } from 'fsrs-browser/fsrs_browser'
 import initSqlJs, { type Database } from 'sql.js'
 import sqliteWasmUrl from './assets/sql-wasm.wasm?url'
+import * as papa from 'papaparse'
+
+// If you're looking at this code as a template/example to use in your own app,
+// note that we initialize fsrs-browser in App.tsx. Grep for 'initThreadPool'.
 
 // @ts-ignore https://github.com/rustwasm/console_error_panic_hook#errorstacktracelimit
 Error.stackTraceLimit = 30
-
 const sqlJs = initSqlJs({
 	locateFile: () => sqliteWasmUrl,
 })
 
-export const train = async (event: { data: 'autotrain' | ArrayBuffer }) => {
-	if (event.data === 'autotrain') {
-		let db = await fetch('/collection.anki21')
-		let ab = await db.arrayBuffer()
-		loadSqliteAndRun(ab)
-	} else if (event.data instanceof ArrayBuffer) {
-		loadSqliteAndRun(event.data)
+export const train = async (event: { data: ArrayBuffer | File }) => {
+	if (event.data instanceof ArrayBuffer) {
+		await loadSqliteAndTrain(event.data)
+	} else if (event.data instanceof File) {
+		loadCsvAndTrain(event.data)
 	}
 }
 
-async function loadSqliteAndRun(ab: ArrayBuffer) {
-	await wasm()
-	await initThreadPool(navigator.hardwareConcurrency)
-	await sleep(1000) // the workers need time to spin up. TODO, post an init message and await a response. Also maybe move worker construction to Javascript.
-	console.time('full training time')
-	let fsrs = new Fsrs()
+async function loadSqliteAndTrain(ab: ArrayBuffer) {
+	console.time('load time')
 	const db = await getDb(ab)
 	let baseQuery = `FROM revlog
     WHERE id < ${Date.now()}
@@ -59,13 +56,49 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
 			i++
 		}
 		trainQuery.free()
-		let weights = fsrs.computeWeightsAnki(cids, eases, ids, types)
-		console.timeEnd('full training time')
-		console.log('trained weights are', weights)
-		console.log('revlog count', count)
+		console.timeEnd('load time')
+		computeWeights(cids, eases, ids, types)
 	} finally {
 		db.close()
 	}
+}
+
+interface ParseData {
+	review_time: string
+	card_id: string
+	review_rating: string
+	review_duration: string
+	review_state: string
+}
+
+// An example CSV may be obtained from https://github.com/open-spaced-repetition/fsrs4anki/issues/450
+// Specifically https://github.com/open-spaced-repetition/fsrs4anki/files/12515294/revlog.csv
+function loadCsvAndTrain(csv: File) {
+	console.time('load time')
+	const cids: bigint[] = []
+	const eases: number[] = []
+	const ids: bigint[] = []
+	const types: number[] = []
+	papa.parse<ParseData>(csv, {
+		header: true,
+		delimiter: ',',
+		step: function ({ data }) {
+			if (data.card_id === undefined) return
+			cids.push(BigInt(data.card_id))
+			ids.push(BigInt(data.review_time))
+			eases.push(Number(data.review_rating))
+			types.push(Number(data.review_state))
+		},
+		complete: function () {
+			console.timeEnd('load time')
+			computeWeights(
+				new BigInt64Array(cids),
+				new Uint8Array(eases),
+				new BigInt64Array(ids),
+				new Uint8Array(types),
+			)
+		},
+	})
 }
 
 async function getDb(ab: ArrayBuffer): Promise<Database> {
@@ -73,6 +106,16 @@ async function getDb(ab: ArrayBuffer): Promise<Database> {
 	return new sql.Database(new Uint8Array(ab))
 }
 
-async function sleep(ms: number): Promise<unknown> {
-	return await new Promise((resolve) => setTimeout(resolve, ms))
+function computeWeights(
+	cids: BigInt64Array,
+	eases: Uint8Array,
+	ids: BigInt64Array,
+	types: Uint8Array,
+) {
+	let fsrs = new Fsrs()
+	console.time('full training time')
+	let weights = fsrs.computeWeightsAnki(cids, eases, ids, types)
+	console.timeEnd('full training time')
+	console.log('trained weights are', weights)
+	console.log('revlog count', cids.length)
 }

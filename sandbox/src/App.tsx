@@ -1,10 +1,14 @@
 import { createResource, type Component } from 'solid-js'
-import init, { Fsrs } from 'fsrs-browser/fsrs_browser'
+import init, { Fsrs, initThreadPool } from 'fsrs-browser/fsrs_browser'
 import { train } from './train'
 import { testSerialization } from './testSerialization'
 
 const App: Component = () => {
-	let [fsrs] = createResource(() => init().then(() => new Fsrs()))
+	let [fsrs] = createResource(async () => {
+		await init()
+		await initThreadPool(navigator.hardwareConcurrency)
+		return new Fsrs()
+	})
 	return (
 		<div style={{ display: 'flex', 'flex-direction': 'column' }}>
 			<h1>FSRS Browser Example</h1>
@@ -34,15 +38,17 @@ const App: Component = () => {
 				Calculate Next Interval
 			</button>
 			<button
-				onclick={() => {
-					train({ data: 'autotrain' })
+				onclick={async () => {
+					let db = await fetch('/collection.anki21')
+					let data = await db.arrayBuffer()
+					train({ data })
 				}}
 			>
 				Train with example file
 			</button>
 			<label>
 				Train with custom file
-				<input type='file' onChange={customFile} accept='.anki21' />
+				<input type='file' onChange={customFile} accept='.anki21, .csv' />
 			</label>
 			<button onclick={testSerialization}>
 				<div>Test Serialization</div>
@@ -61,8 +67,11 @@ async function customFile(
 	const file =
 		// My mental static analysis says to use `currentTarget`, but it seems to randomly be null, hence `target`. I'm confused but whatever.
 		event.target.files?.item(0) ?? throwExp('There should be a file selected')
-	let ab = await file.arrayBuffer()
-	train({ data: ab })
+	if (file.name.endsWith('.csv')) {
+		train({ data: file })
+	} else {
+		train({ data: await file.arrayBuffer() })
+	}
 }
 
 export default App
