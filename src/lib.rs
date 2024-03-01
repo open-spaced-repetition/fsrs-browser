@@ -96,7 +96,7 @@ impl FSRSwasm {
         eases: &[u8],
         ids: &[i64],
         types: &[u8],
-    ) -> Vec<f32> {
+    ) -> Option<Vec<f32>> {
         // https://www.reddit.com/r/rust/comments/b4cxrj/how_to_count_number_of_unique_items_in_an_array/ej8kp2y/
         cids.sort();
         let len = if cids.is_empty() {
@@ -107,9 +107,9 @@ impl FSRSwasm {
         assert_eq!(len, 1, "Expected 1 card, but was given {}", len);
 
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
-        let mut items = anki_to_fsrs(revlog_entries);
-        let item = items.pop().unwrap();
-        self._memory_state(item)
+        anki_to_fsrs(revlog_entries)
+            .pop()
+            .map(|item| self._memory_state(item))
     }
 
     #[wasm_bindgen(js_name = nextInterval)]
