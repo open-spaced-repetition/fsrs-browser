@@ -5,12 +5,13 @@ import * as papa from "papaparse";
 
 // @ts-ignore https://github.com/rustwasm/console_error_panic_hook#errorstacktracelimit
 Error.stackTraceLimit = 30
-
 const sqlJs = initSqlJs({
 	locateFile: () => sqliteWasmUrl,
 })
 
+let train_count = 0;
 export const train = async (event: { data: 'autotrain' | ArrayBuffer | File }) => {
+    await init()
 	if (event.data === 'autotrain') {
 		let db = await fetch('/collection.anki21')
 		let ab = await db.arrayBuffer()
@@ -22,9 +23,19 @@ export const train = async (event: { data: 'autotrain' | ArrayBuffer | File }) =
     }
 }
 
+async function init() {
+    train_count++;
+    console.log('train_count', train_count)
+    if (train_count > 1) {
+        return
+    }
+    // Only the first initialization is allowed.
+    await wasm()
+    await initThreadPool(navigator.hardwareConcurrency)
+}
+
+
 async function loadSqliteAndRun(ab: ArrayBuffer) {
-	await wasm()
-	await initThreadPool(navigator.hardwareConcurrency)
 	await sleep(1000) // the workers need time to spin up. TODO, post an init message and await a response. Also maybe move worker construction to Javascript.
 	console.time('full training time')
 	let fsrs = new Fsrs()
@@ -63,6 +74,7 @@ async function loadSqliteAndRun(ab: ArrayBuffer) {
 		}
 		trainQuery.free()
 		let weights = fsrs.computeWeightsAnki(cids, eases, ids, types)
+        fsrs.free()
 		console.timeEnd('full training time')
 		console.log('trained weights are', weights)
 		console.log('revlog count', count)
@@ -89,8 +101,6 @@ interface csvTrainDataItem {
     review_rating: number
 }
 async function csvTrain(csv: File) {
-    await wasm()
-    await initThreadPool(navigator.hardwareConcurrency)
     await sleep(1000) // the workers need time to spin up. TODO, post an init message and await a response. Also maybe move worker construction to Javascript.
     console.time('full training time')
     const result: csvTrainDataItem[] = [];
@@ -122,6 +132,7 @@ async function csvTrain(csv: File) {
                 ...result.map((r) => r.review_state),
             ]);
             const weights = fsrs.computeWeightsAnki(cids, eases, ids, types)
+            fsrs.free()
             console.timeEnd('full training time')
             console.log('trained weights are', weights)
             console.log('revlog count', result.length)
