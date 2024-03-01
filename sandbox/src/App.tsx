@@ -1,6 +1,6 @@
 import { createResource, type Component } from 'solid-js'
 import init, { Fsrs } from 'fsrs-browser/fsrs_browser'
-import Train from './train.ts?worker'
+import { train } from './train'
 import { testSerialization } from './testSerialization'
 
 const App: Component = () => {
@@ -35,7 +35,7 @@ const App: Component = () => {
 			</button>
 			<button
 				onclick={() => {
-					new Train().postMessage('autotrain')
+					train({ data: 'autotrain' })
 				}}
 			>
 				Train with example file
@@ -59,7 +59,7 @@ async function customFile(
 		// My mental static analysis says to use `currentTarget`, but it seems to randomly be null, hence `target`. I'm confused but whatever.
 		event.target.files?.item(0) ?? throwExp('There should be a file selected')
 	let ab = await file.arrayBuffer()
-	new Train().postMessage(ab, [ab])
+	train({ data: ab })
 }
 
 export default App

@@ -9,7 +9,7 @@ const sqlJs = initSqlJs({
 	locateFile: () => sqliteWasmUrl,
 })
 
-self.onmessage = async (event) => {
+export const train = async (event: { data: 'autotrain' | ArrayBuffer }) => {
 	if (event.data === 'autotrain') {
 		let db = await fetch('/collection.anki21')
 		let ab = await db.arrayBuffer()
