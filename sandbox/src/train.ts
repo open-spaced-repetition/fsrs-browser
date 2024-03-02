@@ -57,7 +57,7 @@ async function loadSqliteAndTrain(ab: ArrayBuffer) {
 		}
 		trainQuery.free()
 		console.timeEnd('load time')
-		computeWeights(cids, eases, ids, types)
+		computeParameters(cids, eases, ids, types)
 	} finally {
 		db.close()
 	}
@@ -91,7 +91,7 @@ function loadCsvAndTrain(csv: File) {
 		},
 		complete: function () {
 			console.timeEnd('load time')
-			computeWeights(
+			computeParameters(
 				new BigInt64Array(cids),
 				new Uint8Array(eases),
 				new BigInt64Array(ids),
@@ -106,7 +106,7 @@ async function getDb(ab: ArrayBuffer): Promise<Database> {
 	return new sql.Database(new Uint8Array(ab))
 }
 
-function computeWeights(
+function computeParameters(
 	cids: BigInt64Array,
 	eases: Uint8Array,
 	ids: BigInt64Array,
@@ -114,8 +114,8 @@ function computeWeights(
 ) {
 	let fsrs = new Fsrs()
 	console.time('full training time')
-	let weights = fsrs.computeWeightsAnki(cids, eases, ids, types)
+	let parameters = fsrs.computeParametersAnki(cids, eases, ids, types)
 	console.timeEnd('full training time')
-	console.log('trained weights are', weights)
+	console.log('trained parameters are', parameters)
 	console.log('revlog count', cids.length)
 }

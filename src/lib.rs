@@ -1,7 +1,7 @@
 use burn::backend::NdArray;
 use fsrs::{
-    anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, MemoryState, NextStates, DEFAULT_WEIGHTS,
-    FSRS,
+    anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, MemoryState, NextStates,
+    DEFAULT_PARAMETERS, FSRS,
 };
 use log::{info, warn};
 use wasm_bindgen::prelude::*;
@@ -20,17 +20,17 @@ impl Default for FSRSwasm {
 #[wasm_bindgen(js_class = Fsrs)]
 impl FSRSwasm {
     #[cfg_attr(target_family = "wasm", wasm_bindgen(constructor))]
-    pub fn new(weights: Option<Vec<f32>>) -> Self {
-        let model = match weights {
-            Some(weights) => FSRS::new(Some(&weights)),
-            None => FSRS::new(Some(&DEFAULT_WEIGHTS)),
+    pub fn new(parameters: Option<Vec<f32>>) -> Self {
+        let model = match parameters {
+            Some(parameters) => FSRS::new(Some(&parameters)),
+            None => FSRS::new(Some(&DEFAULT_PARAMETERS)),
         }
         .unwrap();
         Self { model }
     }
 
-    #[wasm_bindgen(js_name = computeWeightsAnki)]
-    pub fn compute_weights_anki(
+    #[wasm_bindgen(js_name = computeParametersAnki)]
+    pub fn compute_parameters_anki(
         &mut self,
         cids: &[i64],
         eases: &[u8],
@@ -39,26 +39,26 @@ impl FSRSwasm {
     ) -> Vec<f32> {
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
         let items = anki_to_fsrs(revlog_entries);
-        self.train_and_set_weights(items)
+        self.train_and_set_parameters(items)
     }
 
-    #[wasm_bindgen(js_name = computeWeights)]
-    pub fn compute_weights(
+    #[wasm_bindgen(js_name = computeParameters)]
+    pub fn compute_parameters(
         mut self,
         ratings: &[u32],
         delta_ts: &[u32],
         lengths: &[u32],
     ) -> Vec<f32> {
         let items = Self::to_fsrs_items(ratings, delta_ts, lengths);
-        self.train_and_set_weights(items)
+        self.train_and_set_parameters(items)
     }
 
-    fn train_and_set_weights(&mut self, items: Vec<FSRSItem>) -> Vec<f32> {
+    fn train_and_set_parameters(&mut self, items: Vec<FSRSItem>) -> Vec<f32> {
         #[cfg(debug_assertions)]
         warn!("You're training with a debug build... this is going to take a *long* time.");
-        let weights = self.model.compute_weights(items, false, None).unwrap();
-        self.model = FSRS::new(Some(&weights)).unwrap();
-        weights
+        let parameters = self.model.compute_parameters(items, false, None).unwrap();
+        self.model = FSRS::new(Some(&parameters)).unwrap();
+        parameters
     }
 
     #[wasm_bindgen(js_name = memoryState)]
