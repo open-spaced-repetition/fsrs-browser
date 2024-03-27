@@ -4,4 +4,4 @@
 	branch = fsrs-browser
 [submodule "burn"]
 	path = burn
-	url = https://github.com/AlexErrant/burn.git
+	url = https://github.com/open-spaced-repetition/burn.git
