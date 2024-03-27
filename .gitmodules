@@ -5,3 +5,4 @@
 [submodule "burn"]
 	path = burn
 	url = https://github.com/open-spaced-repetition/burn.git
+	branch = fsrs-browser
