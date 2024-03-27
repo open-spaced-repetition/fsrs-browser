@@ -6,7 +6,7 @@ This project runs [fsrs-rs](https://github.com/open-spaced-repetition/fsrs-rs) i
 
 ## Versioning
 
-We git submodule [`fsrs-rs`](https://github.com/AlexErrant/fsrs-rs/tree/fsrs-browser) and [`burn`](https://github.com/AlexErrant/burn/tree/fsrs-browser) for reasons given [here](https://github.com/Tracel-AI/burn/pull/938#issuecomment-1925913866). As such, it will not be up to date with the latest `fsrs-rs`. `fsrs-browser`'s major and minor version numbers will match the version of `fsrs-rs` used. The patch version number is reserved for `fsrs-browser`'s use and may drift out of sync with `fsrs-rs`.
+We git submodule [`fsrs-rs`](https://github.com/open-spaced-repetition/fsrs-rs/tree/fsrs-browser) and [`burn`](https://github.com/open-spaced-repetition/burn/tree/fsrs-browser) for reasons given [here](https://github.com/Tracel-AI/burn/pull/938#issuecomment-1925913866). As such, it will not be up to date with the latest `fsrs-rs`. `fsrs-browser`'s major and minor version numbers will match the version of `fsrs-rs` used. The patch version number is reserved for `fsrs-browser`'s use and may drift out of sync with `fsrs-rs`.
 
 ## Building and demoing
 
