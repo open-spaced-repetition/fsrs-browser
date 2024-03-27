@@ -1,6 +1,7 @@
 [submodule "fsrs-rs"]
 	path = fsrs-rs
-	url = https://github.com/AlexErrant/fsrs-rs.git
+	url = https://github.com/open-spaced-repetition/fsrs-rs.git
+	branch = fsrs-browser
 [submodule "burn"]
 	path = burn
 	url = https://github.com/AlexErrant/burn.git
