@@ -8,7 +8,13 @@ export function testSerialization() {
 	const deltaTs = new Uint32Array(
 		testItems.flatMap((item) => item.reviews.map((r) => r.delta_t)),
 	)
-	Fsrs.testSerialization(ratings, deltaTs, lengths)
+	if ('testSerialization' in Fsrs) {
+		Fsrs.testSerialization(ratings, deltaTs, lengths)
+	} else {
+		console.error(
+			"fsrs-browser was built in 'release' mode. This test will only work in 'dev' mode. Rebuild with `./dev.sh` and try again.",
+		)
+	}
 }
 
 interface FSRSReview {
