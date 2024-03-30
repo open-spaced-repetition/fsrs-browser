@@ -114,7 +114,9 @@ function computeParameters(
 ) {
 	let fsrs = new Fsrs()
 	console.time('full training time')
-	let parameters = fsrs.computeParametersAnki(cids, eases, ids, types)
+	let parameters = fsrs.computeParametersAnki(cids, eases, ids, types, (x) =>
+		console.log('hi from javascript!', x),
+	)
 	console.timeEnd('full training time')
 	console.log('trained parameters are', parameters)
 	console.log('revlog count', cids.length)

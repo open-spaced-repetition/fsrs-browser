@@ -1,3 +1,13 @@
+use rayon::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn logv(x: &JsValue);
+}
+
 use burn::backend::NdArray;
 use fsrs::{
     anki_to_fsrs, to_revlog_entry, FSRSItem, FSRSReview, MemoryState, NextStates,
@@ -36,10 +46,11 @@ impl FSRSwasm {
         eases: &[u8],
         ids: &[i64],
         types: &[u8],
+        f: &js_sys::Function,
     ) -> Vec<f32> {
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
         let items = anki_to_fsrs(revlog_entries);
-        self.train_and_set_parameters(items)
+        self.train_and_set_parameters(items, f)
     }
 
     #[wasm_bindgen(js_name = computeParameters)]
@@ -48,15 +59,42 @@ impl FSRSwasm {
         ratings: &[u32],
         delta_ts: &[u32],
         lengths: &[u32],
+        f: &js_sys::Function,
     ) -> Vec<f32> {
         let items = Self::to_fsrs_items(ratings, delta_ts, lengths);
-        self.train_and_set_parameters(items)
+        self.train_and_set_parameters(items, f)
     }
 
-    fn train_and_set_parameters(&mut self, items: Vec<FSRSItem>) -> Vec<f32> {
+    fn train_and_set_parameters(&mut self, items: Vec<FSRSItem>, f: &js_sys::Function) -> Vec<f32> {
         #[cfg(debug_assertions)]
         warn!("You're training with a debug build... this is going to take a *long* time.");
-        let parameters = self.model.compute_parameters(items, false, None).unwrap();
+
+        let this = JsValue::null();
+        let x = JsValue::from("can call `f` from main thread");
+        let _ = f.call1(&this, &x);
+
+        rayon::spawn(|| {
+            log("can call console.log from rust");
+            let this = JsValue::null();
+            let x = JsValue::from(314159);
+            // uncommenting this results in: within `Function`, the trait `std::marker::Sync` is not implemented for `*mut u8`
+            // let _ = f.call1(&this, &x);
+        });
+
+        let parameters = self
+            .model
+            .compute_parameters(
+                items,
+                false,
+                None,
+                Some(|x| {
+                    let this = JsValue::null();
+                    let x = JsValue::from(x);
+                    // uncommenting this results in: expected fn pointer, found closure
+                    // let _ = f.call1(&this, &x);
+                }),
+            )
+            .unwrap();
         self.model = FSRS::new(Some(&parameters)).unwrap();
         parameters
     }
@@ -317,3 +355,6 @@ pub fn start() {
     console_error_panic_hook::set_once();
     console_log::init().expect("Error initializing logger");
 }
+
+// uncommenting results in: `*mut u8` cannot be shared between threads safely
+// pub static GLOBAL_FN: std::sync::OnceLock<&js_sys::Function> = std::sync::OnceLock::new();
