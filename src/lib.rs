@@ -56,7 +56,7 @@ impl FSRSwasm {
     fn train_and_set_parameters(&mut self, items: Vec<FSRSItem>) -> Vec<f32> {
         #[cfg(debug_assertions)]
         warn!("You're training with a debug build... this is going to take a *long* time.");
-        let parameters = self.model.compute_parameters(items, false, None).unwrap();
+        let parameters = self.model.compute_parameters(items, None).unwrap();
         self.model = FSRS::new(Some(&parameters)).unwrap();
         parameters
     }
