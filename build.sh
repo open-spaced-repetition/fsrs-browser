@@ -21,4 +21,6 @@ fi
 
 # Run wasm pack tool to build JS wrapper files and copy wasm to pkg directory.
 mkdir -p pkg
+
+# some flags are provided by ./Cargo.toml and ./.cargo/config.toml
 wasm-pack build --out-dir pkg --$1 --target web --no-default-features
