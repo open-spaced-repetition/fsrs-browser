@@ -12,7 +12,7 @@ const sqlJs = initSqlJs({
 	locateFile: () => sqliteWasmUrl,
 })
 
-export const train = async (event: { data: ArrayBuffer | File }) => {
+self.onmessage = async (event: MessageEvent<unknown>) => {
 	if (event.data instanceof ArrayBuffer) {
 		await loadSqliteAndTrain(event.data)
 	} else if (event.data instanceof File) {
