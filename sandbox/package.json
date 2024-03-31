@@ -11,23 +11,21 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@surma/rollup-plugin-off-main-thread": "^2.2.3",
-		"@types/sql.js": "^1.4.9",
-		"@types/surma__rollup-plugin-off-main-thread": "^2.2.3",
 		"@types/papaparse": "^5.3.14",
+		"@types/sql.js": "^1.4.9",
 		"prettier": "^3.2.5",
-		"sass": "^1.71.1",
+		"sass": "^1.72.0",
 		"solid-devtools": "^0.29.3",
-		"typescript": "^5.3.3",
-		"vite": "^5.1.4",
-		"vite-plugin-solid": "^2.10.1"
+		"typescript": "^5.4.3",
+		"vite": "^5.2.7",
+		"vite-plugin-solid": "^2.10.2"
 	},
 	"dependencies": {
 		"@popperjs/core": "^2.11.8",
-		"papaparse": "^5.4.1",
 		"bootstrap": "^5.3.3",
 		"fsrs-browser": "link:../pkg",
-		"solid-js": "^1.8.15",
+		"papaparse": "^5.4.1",
+		"solid-js": "^1.8.16",
 		"sql.js": "^1.10.2"
 	}
 }

@@ -1,6 +1,6 @@
 import { createResource, type Component } from 'solid-js'
 import init, { Fsrs, initThreadPool } from 'fsrs-browser/fsrs_browser'
-import { train } from './train'
+import Train from './train.ts?worker'
 import { testSerialization } from './testSerialization'
 
 const App: Component = () => {
@@ -41,7 +41,7 @@ const App: Component = () => {
 				onclick={async () => {
 					let db = await fetch('/collection.anki21')
 					let data = await db.arrayBuffer()
-					train({ data })
+					new Train().postMessage(data, [data])
 				}}
 			>
 				Train with example file
@@ -68,9 +68,10 @@ async function customFile(
 		// My mental static analysis says to use `currentTarget`, but it seems to randomly be null, hence `target`. I'm confused but whatever.
 		event.target.files?.item(0) ?? throwExp('There should be a file selected')
 	if (file.name.endsWith('.csv')) {
-		train({ data: file })
+		new Train().postMessage(file)
 	} else {
-		train({ data: await file.arrayBuffer() })
+		let ab = await file.arrayBuffer()
+		new Train().postMessage(ab, [ab])
 	}
 }
 

@@ -1,4 +1,4 @@
-import wasm, { initThreadPool, Fsrs } from 'fsrs-browser/fsrs_browser'
+import init, { initThreadPool, Fsrs } from 'fsrs-browser/fsrs_browser'
 import initSqlJs, { type Database } from 'sql.js'
 import sqliteWasmUrl from './assets/sql-wasm.wasm?url'
 import * as papa from 'papaparse'
@@ -12,7 +12,14 @@ const sqlJs = initSqlJs({
 	locateFile: () => sqliteWasmUrl,
 })
 
-export const train = async (event: { data: ArrayBuffer | File }) => {
+let isInit = false
+
+self.onmessage = async (event: MessageEvent<unknown>) => {
+	if (!isInit) {
+		await init()
+		await initThreadPool(navigator.hardwareConcurrency)
+		isInit = true
+	}
 	if (event.data instanceof ArrayBuffer) {
 		await loadSqliteAndTrain(event.data)
 	} else if (event.data instanceof File) {

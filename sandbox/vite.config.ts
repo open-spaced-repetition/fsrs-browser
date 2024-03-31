@@ -1,9 +1,8 @@
-import { UserConfig, defineConfig } from 'vite'
+import { defineConfig } from 'vite'
 import solidPlugin from 'vite-plugin-solid'
-import offMainThread from '@surma/rollup-plugin-off-main-thread'
 // import devtools from 'solid-devtools/vite';
 
-export default defineConfig(({ mode }: UserConfig) => {
+export default defineConfig(() => {
 	let plugins = [
 		/* 
     Uncomment the following line to enable solid-devtools.
@@ -12,9 +11,6 @@ export default defineConfig(({ mode }: UserConfig) => {
 		// devtools(),
 		solidPlugin(),
 	]
-	if (mode === 'production') {
-		plugins.push(offMainThread())
-	}
 	return {
 		plugins,
 		server: {
