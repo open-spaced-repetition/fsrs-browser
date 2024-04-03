@@ -36,7 +36,7 @@ impl FSRSwasm {
         eases: &[u8],
         ids: &[i64],
         types: &[u8],
-        progress: Progress,
+        progress: Option<Progress>,
     ) -> Vec<f32> {
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
         let items = anki_to_fsrs(revlog_entries);
@@ -49,21 +49,22 @@ impl FSRSwasm {
         ratings: &[u32],
         delta_ts: &[u32],
         lengths: &[u32],
-        progress: Progress,
+        progress: Option<Progress>,
     ) -> Vec<f32> {
         let items = Self::to_fsrs_items(ratings, delta_ts, lengths);
         self.train_and_set_parameters(items, progress)
     }
 
-    fn train_and_set_parameters(&mut self, items: Vec<FSRSItem>, progress: Progress) -> Vec<f32> {
+    fn train_and_set_parameters(
+        &mut self,
+        items: Vec<FSRSItem>,
+        progress: Option<Progress>,
+    ) -> Vec<f32> {
         #[cfg(debug_assertions)]
         warn!("You're training with a debug build... this is going to take a *long* time.");
         let parameters = self
             .model
-            .compute_parameters(
-                items,
-                Some(CombinedProgressState::new_shared(Some(progress))),
-            )
+            .compute_parameters(items, Some(CombinedProgressState::new_shared(progress)))
             .unwrap();
         self.model = FSRS::new(Some(&parameters)).unwrap();
         parameters
