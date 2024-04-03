@@ -30,9 +30,9 @@ path = "./fsrs-rs"
 
 [dependencies.burn]
 # version = "0.10.0"
-# git = "https://github.com/burn-rs/burn.git"
-# rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
-path = "./burn/burn"
+git = "https://github.com/open-spaced-repetition/burn.git"
+rev = "404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
+# path = "./burn/burn"
 default-features = false
 features = ["std", "train", "autodiff", "wasm-sync", "browser", "ndarray"]
 

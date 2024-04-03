@@ -157,6 +157,7 @@ checksum = "7f30e7476521f6f8af1a1c4c0b8cc94f0bee37d91763d0ca2665f299b6cd8aec"
 [[package]]
 name = "burn"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-core",
  "burn-train",
@@ -165,6 +166,7 @@ dependencies = [
 [[package]]
 name = "burn-autodiff"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-common",
  "burn-tensor",
@@ -175,6 +177,7 @@ dependencies = [
 [[package]]
 name = "burn-candle"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-tensor",
  "candle-core",
@@ -185,6 +188,7 @@ dependencies = [
 [[package]]
 name = "burn-common"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "async-trait",
  "derive-new",
@@ -199,6 +203,7 @@ dependencies = [
 [[package]]
 name = "burn-compute"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-common",
  "derive-new",
@@ -215,6 +220,7 @@ dependencies = [
 [[package]]
 name = "burn-core"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "bincode",
  "burn-autodiff",
@@ -242,6 +248,7 @@ dependencies = [
 [[package]]
 name = "burn-dataset"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "csv",
  "derive-new",
@@ -260,6 +267,7 @@ dependencies = [
 [[package]]
 name = "burn-derive"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "derive-new",
  "proc-macro2",
@@ -270,6 +278,7 @@ dependencies = [
 [[package]]
 name = "burn-fusion"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-common",
  "burn-tensor",
@@ -283,6 +292,7 @@ dependencies = [
 [[package]]
 name = "burn-ndarray"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-autodiff",
  "burn-common",
@@ -300,6 +310,7 @@ dependencies = [
 [[package]]
 name = "burn-tensor"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-common",
  "derive-new",
@@ -315,6 +326,7 @@ dependencies = [
 [[package]]
 name = "burn-train"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-core",
  "derive-new",
@@ -333,6 +345,7 @@ dependencies = [
 [[package]]
 name = "burn-wgpu"
 version = "0.12.1"
+source = "git+https://github.com/open-spaced-repetition/burn.git?rev=404858e4db95c8f6ecd1d50d274aaf223c7bc1a7#404858e4db95c8f6ecd1d50d274aaf223c7bc1a7"
 dependencies = [
  "burn-common",
  "burn-compute",
