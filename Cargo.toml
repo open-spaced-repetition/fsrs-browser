@@ -22,6 +22,7 @@ console_log = { version = "1" }
 log = { default-features = false, version = "0.4.20" }
 wasm-bindgen = "0.2.91"
 getrandom = { version = "0.2", features = ["js"] }
+js-sys = { version = "0.3.68" }
 
 [dependencies.fsrs]
 path = "./fsrs-rs"

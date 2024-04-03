@@ -756,6 +756,7 @@ dependencies = [
  "console_log",
  "fsrs",
  "getrandom",
+ "js-sys",
  "log",
  "wasm-bindgen",
 ]

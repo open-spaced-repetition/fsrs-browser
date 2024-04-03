@@ -6,6 +6,29 @@ use fsrs::{
 use log::{info, warn};
 use wasm_bindgen::prelude::*;
 
+// #[wasm_bindgen]
+// extern "C" {
+//     #[wasm_bindgen(js_namespace = console)]
+//     fn log(s: &str);
+//     #[wasm_bindgen(js_namespace = console, js_name = log)]
+//     fn logv(x: &JsValue);
+// }
+
+#[wasm_bindgen(module = "/js/foo.js")]
+extern "C" {
+    // #[wasm_bindgen(js_name = "foo")]
+    #[wasm_bindgen(js_name = "foo")]
+    fn foo();
+    #[wasm_bindgen(js_name = "setFoo")]
+    fn setFoo(f: js_sys::Function);
+}
+
+// #[wasm_bindgen(raw_module = "../../../../some/js/file.js")]
+// extern "C" {
+//     #[wasm_bindgen(js_name = "fooRaw")]
+//     fn fooRaw();
+// }
+
 #[wasm_bindgen(js_name = Fsrs)]
 pub struct FSRSwasm {
     model: FSRS<NdArray>,
@@ -59,6 +82,16 @@ impl FSRSwasm {
         let parameters = self.model.compute_parameters(items, None).unwrap();
         self.model = FSRS::new(Some(&parameters)).unwrap();
         parameters
+    }
+
+    #[wasm_bindgen(js_name = fooRust)]
+    pub fn fooRust(&self) {
+        foo();
+    }
+
+    #[wasm_bindgen(js_name = setFooRust)]
+    pub fn set_foo_rust(&self, f: js_sys::Function) {
+        setFoo(f);
     }
 
     #[wasm_bindgen(js_name = memoryState)]

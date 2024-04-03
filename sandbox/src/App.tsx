@@ -14,6 +14,22 @@ const App: Component = () => {
 			<h1>FSRS Browser Example</h1>
 			<button
 				onClick={() => {
+					fsrs().fooRust()
+				}}
+			>
+				foo
+			</button>
+			<button
+				onClick={() => {
+					fsrs().setFooRust(() => {
+						console.log('user-defined callback')
+					})
+				}}
+			>
+				setFoo
+			</button>
+			<button
+				onClick={() => {
 					const ratings = new Uint32Array([3, 3, 3])
 					const delta_ts = new Uint32Array([0, 3, 6])
 					const result = fsrs().memoryState(ratings, delta_ts)
