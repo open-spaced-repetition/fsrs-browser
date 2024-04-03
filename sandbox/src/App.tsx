@@ -1,7 +1,6 @@
 import {
 	Accessor,
 	Setter,
-	VoidComponent,
 	createResource,
 	createSignal,
 	type Component,
