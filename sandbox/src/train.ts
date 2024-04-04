@@ -1,4 +1,9 @@
-import init, { initThreadPool, Fsrs } from 'fsrs-browser/fsrs_browser'
+import init, {
+	initThreadPool,
+	Fsrs,
+	Progress,
+	InitOutput,
+} from 'fsrs-browser/fsrs_browser'
 import initSqlJs, { type Database } from 'sql.js'
 import sqliteWasmUrl from './assets/sql-wasm.wasm?url'
 import * as papa from 'papaparse'
@@ -12,13 +17,12 @@ const sqlJs = initSqlJs({
 	locateFile: () => sqliteWasmUrl,
 })
 
-let isInit = false
+let initOutput: InitOutput = null
 
 self.onmessage = async (event: MessageEvent<unknown>) => {
-	if (!isInit) {
-		await init()
+	if (initOutput == null) {
+		initOutput = await init()
 		await initThreadPool(navigator.hardwareConcurrency)
-		isInit = true
 	}
 	if (event.data instanceof ArrayBuffer) {
 		await loadSqliteAndTrain(event.data)
@@ -121,8 +125,31 @@ function computeParameters(
 ) {
 	let fsrs = new Fsrs()
 	console.time('full training time')
-	let parameters = fsrs.computeParametersAnki(cids, eases, ids, types)
+	// Rust will GC this `progress` struct upon the completion of `computeParametersAnki`.
+	let progress = Progress.new()
+	self.postMessage({
+		tag: 'Start',
+		buffer: initOutput.memory.buffer,
+		// When `progress` is GCed, `pointer()` will point to arbitrary memory.
+		// Therefore no semantics are guaranteed after the completion of `computeParametersAnki`.
+		// Do not read from memory after `Stop` is posted!
+		pointer: progress.pointer(),
+	} satisfies ProgressMessage)
+	let parameters = fsrs.computeParametersAnki(cids, eases, ids, types, progress)
+	self.postMessage({
+		tag: 'Stop',
+	} satisfies ProgressMessage)
 	console.timeEnd('full training time')
 	console.log('trained parameters are', parameters)
 	console.log('revlog count', cids.length)
 }
+
+export type ProgressMessage =
+	| {
+			tag: 'Start'
+			buffer: ArrayBuffer
+			pointer: number
+	  }
+	| {
+			tag: 'Stop'
+	  }
