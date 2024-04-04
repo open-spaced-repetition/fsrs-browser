@@ -5,7 +5,11 @@ import {
 	createSignal,
 	type Component,
 } from 'solid-js'
-import init, { Fsrs, initThreadPool } from 'fsrs-browser/fsrs_browser'
+import init, {
+	Fsrs,
+	getProgress,
+	initThreadPool,
+} from 'fsrs-browser/fsrs_browser'
 import Train from './train.ts?worker'
 import { testSerialization } from './testSerialization'
 import { ProgressMessage } from './train'
@@ -96,10 +100,12 @@ async function trainOn(
 		let msg = m.data as ProgressMessage
 		if (msg.tag === 'Start') {
 			intervalId = window.setInterval(() => {
-				// The progress vec is length 2. Grep 2291AF52-BEE4-4D54-BAD0-6492DFE368D8
-				const progress = new Uint32Array(msg.buffer, msg.pointer, 2)
-				setItemsProcessed(progress[0])
-				setItemsTotal(progress[1])
+				let { itemsProcessed, itemsTotal } = getProgress(
+					msg.buffer,
+					msg.pointer,
+				)
+				setItemsProcessed(itemsProcessed)
+				setItemsTotal(itemsTotal)
 			}, 100)
 		} else if (msg.tag === 'Stop') {
 			clearInterval(intervalId)
