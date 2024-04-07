@@ -138,6 +138,7 @@ function computeParameters(
 	let parameters = fsrs.computeParametersAnki(cids, eases, ids, types, progress)
 	self.postMessage({
 		tag: 'Stop',
+		parameters,
 	} satisfies ProgressMessage)
 	console.timeEnd('full training time')
 	console.log('trained parameters are', parameters)
@@ -152,4 +153,5 @@ export type ProgressMessage =
 	  }
 	| {
 			tag: 'Stop'
+			parameters: Float32Array
 	  }
