@@ -1,6 +1,7 @@
-import { Fsrs } from 'fsrs-browser/fsrs_browser'
+import init, { Fsrs } from 'fsrs-browser/fsrs_browser'
 
-export function testSerialization() {
+export async function testSerialization() {
+  await init()
 	const lengths = new Uint32Array(testItems.map((item) => item.reviews.length))
 	const ratings = new Uint32Array(
 		testItems.flatMap((item) => item.reviews.map((r) => r.rating)),
@@ -9,11 +10,18 @@ export function testSerialization() {
 		testItems.flatMap((item) => item.reviews.map((r) => r.delta_t)),
 	)
 	if ('testSerialization' in Fsrs) {
-		Fsrs.testSerialization(ratings, deltaTs, lengths)
+		try {
+			Fsrs.testSerialization(ratings, deltaTs, lengths)
+			return true
+		} catch (e) {
+			console.error(e)
+			return false
+		}
 	} else {
 		console.error(
 			"fsrs-browser was built in 'release' mode. This test will only work in 'dev' mode. Rebuild with `./dev.sh` and try again.",
 		)
+		return false
 	}
 }
 

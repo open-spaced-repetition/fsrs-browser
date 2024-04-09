@@ -2,3 +2,7 @@ node_modules
 dist
 public
 src/assets
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -1,31 +1,33 @@
 {
-	"name": "vite-template-solid",
-	"version": "0.0.0",
-	"description": "",
-	"scripts": {
-		"start": "vite",
-		"dev": "vite",
-		"build": "vite build",
-		"serve": "vite preview",
-		"postinstall": "./postinstall.sh"
-	},
-	"license": "MIT",
-	"devDependencies": {
-		"@types/papaparse": "^5.3.14",
-		"@types/sql.js": "^1.4.9",
-		"prettier": "^3.2.5",
-		"sass": "^1.72.0",
-		"solid-devtools": "^0.29.3",
-		"typescript": "^5.4.3",
-		"vite": "^5.2.7",
-		"vite-plugin-solid": "^2.10.2"
-	},
-	"dependencies": {
-		"@popperjs/core": "^2.11.8",
-		"bootstrap": "^5.3.3",
-		"fsrs-browser": "link:../pkg",
-		"papaparse": "^5.4.1",
-		"solid-js": "^1.8.16",
-		"sql.js": "^1.10.2"
-	}
+  "name": "vite-template-solid",
+  "version": "0.0.0",
+  "description": "",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "postinstall": "./postinstall.sh"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.43.0",
+    "@types/node": "^20.12.4",
+    "@types/papaparse": "^5.3.14",
+    "@types/sql.js": "^1.4.9",
+    "prettier": "^3.2.5",
+    "sass": "^1.72.0",
+    "solid-devtools": "^0.29.3",
+    "typescript": "^5.4.3",
+    "vite": "^5.2.7",
+    "vite-plugin-solid": "^2.10.2"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.3",
+    "fsrs-browser": "link:../pkg",
+    "papaparse": "^5.4.1",
+    "solid-js": "^1.8.16",
+    "sql.js": "^1.10.2"
+  }
 }
