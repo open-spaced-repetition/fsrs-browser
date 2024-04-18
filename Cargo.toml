@@ -20,7 +20,7 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1" }
 log = { default-features = false, version = "0.4.20" }
-wasm-bindgen = "0.2.91"
+wasm-bindgen = "0.2.92"
 getrandom = { version = "0.2", features = ["js"] }
 
 [dependencies.fsrs]
@@ -32,7 +32,7 @@ path = "./fsrs-rs"
 # version = "0.10.0"
 # git = "https://github.com/burn-rs/burn.git"
 # rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
-path = "./burn/burn"
+path = "./burn/crates/burn"
 default-features = false
 features = ["std", "train", "autodiff", "wasm-sync", "browser", "ndarray"]
 
