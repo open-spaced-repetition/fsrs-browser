@@ -135,7 +135,25 @@ function computeParameters(
 		// Do not read from memory after `Stop` is posted!
 		pointer: progress.pointer(),
 	} satisfies ProgressMessage)
-	let parameters = fsrs.computeParametersAnki(cids, eases, ids, types, progress)
+	// MDN states:
+	//     The number of minutes returned by getTimezoneOffset() is positive if the
+	//     local time zone is behind UTC, and negative if the local time zone is ahead of UTC.
+	// This is useful when going from our timezone to UTC; our local time + offset = UTC.
+	// However, we want to go from UTC to our timezone. (Anki revlog id is UTC, and we want to convert it to local time.)
+	// So we flip the sign of `getTimezoneOffset()`.
+	let timeZoneMinutesOffset = new Date().getTimezoneOffset() * -1
+	let ankiNextDayStartsAtMinutes = 4 * 60
+	let parameters = fsrs.computeParametersAnki(
+		// We subtract ankiNextDayStartsAtMinutes because
+		// we want a review done at, say, 1am to be done for the *prior* day.
+		// Adding would move it into the future.
+		timeZoneMinutesOffset - ankiNextDayStartsAtMinutes,
+		cids,
+		eases,
+		ids,
+		types,
+		progress,
+	)
 	self.postMessage({
 		tag: 'Stop',
 		parameters,
