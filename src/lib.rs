@@ -29,9 +29,11 @@ impl FSRSwasm {
         Self { model }
     }
 
+    /// `minute_offset` should be the `user's timezone offset from UTC` minus `Anki's "next day starts at"`, in minutes.
     #[wasm_bindgen(js_name = computeParametersAnki)]
     pub fn compute_parameters_anki(
         &mut self,
+        minute_offset: i32,
         cids: &[i64],
         eases: &[u8],
         ids: &[i64],
@@ -39,7 +41,7 @@ impl FSRSwasm {
         progress: Option<Progress>,
     ) -> Vec<f32> {
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
-        let items = anki_to_fsrs(revlog_entries);
+        let items = anki_to_fsrs(revlog_entries, minute_offset);
         self.train_and_set_parameters(items, progress)
     }
 
@@ -98,9 +100,11 @@ impl FSRSwasm {
     }
 
     #[wasm_bindgen(js_name = memoryStateAnki)]
+    /// `minute_offset` should be the `user's timezone offset from UTC` minus `Anki's "next day starts at"`, in minutes.
     /// Returns an array of 2 elements: `[stability, difficulty]`
     pub fn memory_state_anki(
         &self,
+        minute_offset: i32,
         cids: &mut [i64],
         eases: &[u8],
         ids: &[i64],
@@ -116,7 +120,7 @@ impl FSRSwasm {
         assert_eq!(len, 1, "Expected 1 card, but was given {}", len);
 
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
-        anki_to_fsrs(revlog_entries)
+        anki_to_fsrs(revlog_entries, minute_offset)
             .pop()
             .map(|item| self._memory_state(item))
     }
