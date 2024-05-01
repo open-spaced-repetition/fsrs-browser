@@ -158,6 +158,18 @@ function computeParameters(
 	console.timeEnd('full training time')
 	console.log('trained parameters are', parameters)
 	console.log('revlog count', cids.length)
+
+	// grep D91EEC72-FCBC-4140-8ADC-9CF2016A56C5
+	// You can *probably* not call `fsrs.free()`.
+	// This is because we use a version of wasm-bindgen that supports WeakRef.
+	// https://github.com/rustwasm/wasm-bindgen/blob/main/guide/src/reference/weak-references.md
+	// Fsrs-browser requires `SharedArrayBuffer`, which in turn requires COOP and COEP.
+	// All browsers supported COOP and COEP at or before supporting WeakRef...
+	// ...with the sole exception of Chrome 83 and Edge 83, released May 18, 2020.
+	// If you care about users on exactly those versions, go ahead and call `.free()`.
+	// I'll demonstrate calling it since this is a reference example.
+	// You must *not* call `progress.free()` since Rust will GC it for you.
+	fsrs.free()
 }
 
 export type ProgressMessage =

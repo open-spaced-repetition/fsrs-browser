@@ -22,9 +22,11 @@ const App: Component = () => {
 					await init()
 					const ratings = new Uint32Array([3, 3, 3])
 					const delta_ts = new Uint32Array([0, 3, 6])
-					const result = new Fsrs().memoryState(ratings, delta_ts)
+					const fsrs = new Fsrs()
+					const result = fsrs.memoryState(ratings, delta_ts)
 					setMemoryState(result.toString())
 					console.log('Memory state:', result)
+					fsrs.free() // for details grep D91EEC72-FCBC-4140-8ADC-9CF2016A56C5
 				}}
 			>
 				Calculate Memory State
@@ -38,13 +40,11 @@ const App: Component = () => {
 					const stability = 1.5 // or undefined
 					const desired_retention = 0.9
 					const rating = 3
-					const result = new Fsrs().nextInterval(
-						stability,
-						desired_retention,
-						rating,
-					)
+					const fsrs = new Fsrs()
+					const result = fsrs.nextInterval(stability, desired_retention, rating)
 					console.log('Next interval:', result)
 					setNextInterval(result.toString())
+					fsrs.free() // for details grep D91EEC72-FCBC-4140-8ADC-9CF2016A56C5
 				}}
 			>
 				Calculate Next Interval
