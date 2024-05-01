@@ -8,9 +8,6 @@ import initSqlJs, { type Database } from 'sql.js'
 import sqliteWasmUrl from './assets/sql-wasm.wasm?url'
 import * as papa from 'papaparse'
 
-// If you're looking at this code as a template/example to use in your own app,
-// note that we initialize fsrs-browser in App.tsx. Grep for 'initThreadPool'.
-
 // @ts-ignore https://github.com/rustwasm/console_error_panic_hook#errorstacktracelimit
 Error.stackTraceLimit = 30
 const sqlJs = initSqlJs({

@@ -118,6 +118,7 @@ async function trainOn(
 	t.addEventListener('message', (m) => {
 		let msg = m.data as ProgressMessage
 		if (msg.tag === 'Start') {
+			setParameters('')
 			intervalId = window.setInterval(() => {
 				let { itemsProcessed, itemsTotal } = getProgress(
 					msg.buffer,
