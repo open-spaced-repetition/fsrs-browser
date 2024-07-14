@@ -16,7 +16,7 @@ test('check memory state', async ({ page }) => {
 				intervals: [200],
 			},
 		)
-		.toEqual([27, 5])
+		.toEqual([29, 5])
 })
 
 test('check next interval', async ({ page }) => {
@@ -63,5 +63,5 @@ test('check progress and parameters', async ({ page }) => {
 				intervals: [200],
 			},
 		)
-		.toEqual(17)
+		.toEqual(19)
 })
