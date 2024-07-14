@@ -745,7 +745,7 @@ dependencies = [
 
 [[package]]
 name = "fsrs-browser"
-version = "0.6.3"
+version = "1.0.0"
 dependencies = [
  "burn",
  "console_error_panic_hook",
