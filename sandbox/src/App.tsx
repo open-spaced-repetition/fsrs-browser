@@ -41,7 +41,7 @@ const App: Component = () => {
 					const desired_retention = 0.9
 					const rating = 3
 					const fsrs = new Fsrs()
-					const result = fsrs.nextInterval(stability, desired_retention, rating)
+					const result = fsrs.nextInterval(stability, desired_retention, rating).toFixed(0)
 					console.log('Next interval:', result)
 					setNextInterval(result.toString())
 					fsrs.free() // for details grep D91EEC72-FCBC-4140-8ADC-9CF2016A56C5

@@ -34,7 +34,7 @@
           const stability = 1.5; // or undefined
           const desired_retention = 0.9;
           const rating = 3;
-          const result = fsrs.nextInterval(stability, desired_retention, rating);
+          const result = fsrs.nextInterval(stability, desired_retention, rating).toFixed(0);
           console.log("Next interval:", result);
         }
       });
