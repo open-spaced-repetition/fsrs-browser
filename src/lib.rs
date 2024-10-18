@@ -131,7 +131,7 @@ impl FSRSwasm {
         stability: Option<f32>,
         desired_retention: f32,
         rating: u32,
-    ) -> u32 {
+    ) -> f32 {
         self.model
             .next_interval(stability, desired_retention, rating)
     }

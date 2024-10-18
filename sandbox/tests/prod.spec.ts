@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { goHome } from './util'
 
 test('check memory state', async ({ page }) => {
@@ -22,13 +22,16 @@ test('check memory state', async ({ page }) => {
 test('check next interval', async ({ page }) => {
 	await goHome(page)
 	await page.getByRole('button', { name: 'Calculate Next Interval' }).click()
-	await expect(page.locator('#nextIntervalResponse')).toHaveText('2')
+	await expect(page.locator('#nextIntervalResponse')).toContainText('.') // ensures that text has updated, so the more specific assertion `.toEqual(2)` can run
+	const nextInterval = await page.locator('#nextIntervalResponse').textContent()
+	const rounded = Math.round(parseFloat(nextInterval))
+	expect(rounded).toEqual(2)
 })
 
 test('check progress and parameters', async ({ page }) => {
 	await goHome(page)
 	await page.getByRole('button', { name: 'Train with example file' }).click()
-	let progress = await page.locator('#progressNumbers').innerText()
+	const progress = await page.locator('#progressNumbers').innerText()
 	expect(progress).toEqual('0/0')
 	await expect
 		.poll(
