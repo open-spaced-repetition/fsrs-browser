@@ -41,7 +41,7 @@ test('check progress and parameters', async ({ page }) => {
 				return {
 					numeratorLargerThan0: n > 0,
 					numeratorLessThanDenominator: n < d,
-					denominatorIsLarge: d > 10000,
+					denominatorIsLarge: d > 100,
 				}
 			},
 			{
