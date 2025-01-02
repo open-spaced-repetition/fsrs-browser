@@ -31,6 +31,7 @@ impl FSRSwasm {
 
     /// `minute_offset` should be the `user's timezone offset from UTC` minus `Anki's "next day starts at"`, in minutes.
     #[wasm_bindgen(js_name = computeParametersAnki)]
+    #[allow(clippy::too_many_arguments)]
     pub fn compute_parameters_anki(
         &mut self,
         minute_offset: i32,
@@ -39,10 +40,11 @@ impl FSRSwasm {
         ids: &[i64],
         types: &[u8],
         progress: Option<Progress>,
+        enable_short_term: bool,
     ) -> Vec<f32> {
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
         let items = anki_to_fsrs(revlog_entries, minute_offset);
-        self.train_and_set_parameters(items, progress)
+        self.train_and_set_parameters(items, progress, enable_short_term)
     }
 
     #[wasm_bindgen(js_name = computeParameters)]
@@ -52,21 +54,27 @@ impl FSRSwasm {
         delta_ts: &[u32],
         lengths: &[u32],
         progress: Option<Progress>,
+        enable_short_term: bool,
     ) -> Vec<f32> {
         let items = Self::to_fsrs_items(ratings, delta_ts, lengths);
-        self.train_and_set_parameters(items, progress)
+        self.train_and_set_parameters(items, progress, enable_short_term)
     }
 
     fn train_and_set_parameters(
         &mut self,
         items: Vec<FSRSItem>,
         progress: Option<Progress>,
+        enable_short_term: bool,
     ) -> Vec<f32> {
         #[cfg(debug_assertions)]
         warn!("You're training with a debug build... this is going to take a *long* time.");
         let parameters = self
             .model
-            .compute_parameters(items, Some(CombinedProgressState::new_shared(progress)))
+            .compute_parameters(
+                items,
+                Some(CombinedProgressState::new_shared(progress)),
+                enable_short_term,
+            )
             .unwrap();
         self.model = FSRS::new(Some(&parameters)).unwrap();
         parameters
