@@ -150,6 +150,7 @@ function computeParameters(
 		ids,
 		types,
 		progress,
+		true
 	)
 	self.postMessage({
 		tag: 'Stop',
