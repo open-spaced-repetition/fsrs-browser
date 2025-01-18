@@ -2,6 +2,11 @@
 	"name": "vite-template-solid",
 	"version": "0.0.0",
 	"description": "",
+	"engines": {
+		"node": "20.14.0",
+		"pnpm": "9.5.0"
+	},
+	"packageManager": "pnpm@9.5.0",
 	"scripts": {
 		"start": "vite",
 		"dev": "vite",
@@ -11,7 +16,7 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@playwright/test": "^1.43.0",
+		"@playwright/test": "^1.49.1",
 		"@types/node": "^20.12.4",
 		"@types/papaparse": "^5.3.14",
 		"@types/sql.js": "^1.4.9",
