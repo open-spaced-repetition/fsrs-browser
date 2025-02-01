@@ -34,7 +34,7 @@ path = "./fsrs-rs"
 # rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
 path = "./burn/crates/burn"
 default-features = false
-features = ["std", "train", "autodiff", "wasm-sync", "browser", "ndarray"]
+features = ["std", "train", "autodiff", "browser", "ndarray"]
 
 [profile.release]
 codegen-units = 1
