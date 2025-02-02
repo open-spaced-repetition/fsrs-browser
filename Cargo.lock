@@ -1141,7 +1141,6 @@ dependencies = [
  "console_error_panic_hook",
  "console_log",
  "fsrs",
- "getrandom 0.2.15",
  "log",
  "wasm-bindgen",
 ]
