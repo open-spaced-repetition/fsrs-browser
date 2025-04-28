@@ -1,7 +1,7 @@
 use burn::backend::NdArray;
 use fsrs::{
-    anki_to_fsrs, to_revlog_entry, CombinedProgressState, FSRSItem, FSRSReview, MemoryState,
-    NextStates, Progress, DEFAULT_PARAMETERS, FSRS,
+    anki_to_fsrs, to_revlog_entry, CombinedProgressState, ComputeParametersInput, FSRSItem,
+    FSRSReview, MemoryState, NextStates, Progress, DEFAULT_PARAMETERS, FSRS,
 };
 use log::{info, warn};
 use wasm_bindgen::prelude::*;
@@ -70,11 +70,12 @@ impl FSRSwasm {
         warn!("You're training with a debug build... this is going to take a *long* time.");
         let parameters = self
             .model
-            .compute_parameters(
-                items,
-                Some(CombinedProgressState::new_shared(progress)),
+            .compute_parameters(ComputeParametersInput {
+                train_set: items,
+                progress: Some(CombinedProgressState::new_shared(progress)),
                 enable_short_term,
-            )
+                num_relearning_steps: None,
+            })
             .unwrap();
         self.model = FSRS::new(Some(&parameters)).unwrap();
         parameters
@@ -125,7 +126,7 @@ impl FSRSwasm {
         } else {
             1 + cids.windows(2).filter(|win| win[0] != win[1]).count()
         };
-        assert_eq!(len, 1, "Expected 1 card, but was given {}", len);
+        assert_eq!(len, 1, "Expected 1 card, but was given {len}");
 
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
         anki_to_fsrs(revlog_entries, minute_offset)
