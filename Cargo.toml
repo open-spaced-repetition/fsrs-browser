@@ -1,9 +1,9 @@
 [package]
 name = "fsrs-browser"
 version = "3.0.0"
-edition = "2021"
 authors = ["Open Spaced Repetition"]
 categories = ["algorithms", "science"]
+edition = "2021"
 homepage = "https://github.com/open-spaced-repetition"
 keywords = ["spaced-repetition", "algorithm", "fsrs", "machine-learning"]
 license = "BSD-3-Clause"
@@ -19,6 +19,7 @@ crate-type = ["cdylib"]
 [dependencies]
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1" }
+getrandom = { version = "0.3", features = ["wasm_js"] }
 log = { default-features = false, version = "0.4.25" }
 wasm-bindgen = "0.2.100"
 
