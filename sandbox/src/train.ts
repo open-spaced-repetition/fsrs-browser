@@ -95,7 +95,12 @@ function loadCsvAndTrain(csv: File) {
 			cids.push(BigInt(data.card_id))
 			ids.push(BigInt(data.review_time))
 			eases.push(Number(data.review_rating))
-			types.push(Number(data.review_state))
+			// Convert review_state to RevlogReviewKind
+			// 0,1 -> Learning (0)
+			// 2 -> Review (1)
+			// 3 -> Relearning (2)
+			const state = Number(data.review_state)
+			types.push(state <= 1 ? 0 : state === 2 ? 1 : 2)
 		},
 		complete: function () {
 			console.timeEnd('load time')
