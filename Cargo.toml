@@ -1,6 +1,6 @@
 [package]
 name = "fsrs-browser"
-version = "4.1.1"
+version = "5.2.0"
 authors = ["Open Spaced Repetition"]
 categories = ["algorithms", "science"]
 edition = "2021"
