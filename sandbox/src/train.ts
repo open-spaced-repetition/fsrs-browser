@@ -2,6 +2,7 @@ import init, {
 	initThreadPool,
 	Fsrs,
 	Progress,
+	TrainingConfig,
 	InitOutput,
 } from 'fsrs-browser/fsrs_browser'
 import initSqlJs, { type Database } from 'sql.js'
@@ -145,6 +146,7 @@ function computeParameters(
 	// So we flip the sign of `getTimezoneOffset()`.
 	let timeZoneMinutesOffset = new Date().getTimezoneOffset() * -1
 	let ankiNextDayStartsAtMinutes = 4 * 60
+	let trainingConfig = new TrainingConfig()
 	let parameters = fsrs.computeParametersAnki(
 		// We subtract ankiNextDayStartsAtMinutes because
 		// we want a review done at, say, 1am to be done for the *prior* day.
@@ -155,7 +157,9 @@ function computeParameters(
 		ids,
 		types,
 		progress,
-		true
+		true,
+		null,
+		trainingConfig,
 	)
 	self.postMessage({
 		tag: 'Stop',

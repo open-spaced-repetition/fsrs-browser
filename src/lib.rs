@@ -216,10 +216,19 @@ impl FSRSwasm {
         types: &[u8],
         progress: Option<Progress>,
         enable_short_term: bool,
+        num_relearning_steps: Option<usize>,
+        training_config: Option<TrainingConfig>,
     ) -> Vec<f32> {
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
         let items = anki_to_fsrs(revlog_entries, minute_offset);
-        self.train_and_set_parameters(items, progress, enable_short_term, None, None, None)
+        self.train_and_set_parameters(
+            items,
+            progress,
+            enable_short_term,
+            None,
+            num_relearning_steps,
+            training_config,
+        )
     }
 
     #[wasm_bindgen(js_name = computeParameters)]
