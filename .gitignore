@@ -8,3 +8,7 @@ target/
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+# Former git submodules; fsrs-browser now depends on fsrs from crates.io.
+burn/
+fsrs-rs/

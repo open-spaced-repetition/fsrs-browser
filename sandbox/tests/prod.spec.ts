@@ -40,7 +40,7 @@ test('check progress and parameters', async ({ page }) => {
 				let [n, d] = progress.split('/').map((x) => Math.round(parseInt(x)))
 				return {
 					numeratorLargerThan0: n > 0,
-					numeratorLessThanDenominator: n < d,
+					numeratorNoMoreThanDenominator: n <= d,
 					denominatorIsLarge: d > 100,
 				}
 			},
@@ -52,7 +52,7 @@ test('check progress and parameters', async ({ page }) => {
 		)
 		.toEqual({
 			numeratorLargerThan0: true,
-			numeratorLessThanDenominator: true,
+			numeratorNoMoreThanDenominator: true,
 			denominatorIsLarge: true,
 		})
 	await expect

@@ -1,14 +1,65 @@
-use burn::backend::NdArray;
-use fsrs::{
-    anki_to_fsrs, to_revlog_entry, CombinedProgressState, ComputeParametersInput, FSRSItem,
-    FSRSReview, MemoryState, NextStates, Progress, DEFAULT_PARAMETERS, FSRS,
+mod anki;
+
+use std::sync::{
+    atomic::{AtomicBool, AtomicU32, Ordering},
+    Arc, Mutex,
 };
+use std::time::Duration;
+
+use anki::{anki_to_fsrs, to_revlog_entry};
+use fsrs::{
+    compute_parameters as compute_fsrs_parameters, CombinedProgressState, ComputeParametersInput,
+    FSRSItem, FSRSReview, MemoryState, FSRS,
+};
+#[cfg(debug_assertions)]
 use log::{info, warn};
 use wasm_bindgen::prelude::*;
+pub use wasm_bindgen_rayon::init_thread_pool;
+
+#[wasm_bindgen]
+#[derive(Debug, Clone)]
+pub struct Progress {
+    counters: Arc<[AtomicU32; 2]>,
+}
+
+#[wasm_bindgen]
+impl Progress {
+    // The progress vec is length 2. Grep 2291AF52-BEE4-4D54-BAD0-6492DFE368D8
+    pub fn new() -> Progress {
+        Self {
+            counters: Arc::new([AtomicU32::new(0), AtomicU32::new(0)]),
+        }
+    }
+
+    /// Memory will hold [items_processed, items_total]
+    pub fn pointer(&self) -> *const u32 {
+        self.counters.as_ptr().cast()
+    }
+}
+
+impl Default for Progress {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn copy_progress(
+    progress: &Arc<Mutex<CombinedProgressState>>,
+    counters: &Arc<[AtomicU32; 2]>,
+    force_total: bool,
+) {
+    let progress = progress.lock().unwrap();
+    let current = progress.current() as u32;
+    let total = progress.total() as u32;
+    counters[0].store(current, Ordering::Release);
+    if force_total || counters[1].load(Ordering::Acquire) == 0 {
+        counters[1].store(total, Ordering::Release);
+    }
+}
 
 #[wasm_bindgen(js_name = Fsrs)]
 pub struct FSRSwasm {
-    model: FSRS<NdArray>,
+    model: FSRS,
 }
 
 impl Default for FSRSwasm {
@@ -21,11 +72,7 @@ impl Default for FSRSwasm {
 impl FSRSwasm {
     #[cfg_attr(target_family = "wasm", wasm_bindgen(constructor))]
     pub fn new(parameters: Option<Vec<f32>>) -> Self {
-        let model = match parameters {
-            Some(parameters) => FSRS::new(Some(&parameters)),
-            None => FSRS::new(Some(&DEFAULT_PARAMETERS)),
-        }
-        .unwrap();
+        let model = FSRS::new(parameters.as_deref().unwrap_or(&[])).unwrap();
         Self { model }
     }
 
@@ -68,16 +115,37 @@ impl FSRSwasm {
     ) -> Vec<f32> {
         #[cfg(debug_assertions)]
         warn!("You're training with a debug build... this is going to take a *long* time.");
-        let parameters = self
-            .model
-            .compute_parameters(ComputeParametersInput {
-                train_set: items,
-                progress: Some(CombinedProgressState::new_shared(progress)),
-                enable_short_term,
-                num_relearning_steps: None,
-            })
-            .unwrap();
-        self.model = FSRS::new(Some(&parameters)).unwrap();
+
+        let fsrs_progress = CombinedProgressState::new_shared();
+        let counters = progress.map(|progress| progress.counters);
+        let monitor_done = Arc::new(AtomicBool::new(false));
+
+        if let Some(counters) = counters.clone() {
+            let fsrs_progress = fsrs_progress.clone();
+            let monitor_done = monitor_done.clone();
+            rayon::spawn(move || {
+                while !monitor_done.load(Ordering::Acquire) {
+                    copy_progress(&fsrs_progress, &counters, false);
+                    std::thread::sleep(Duration::from_millis(50));
+                }
+                copy_progress(&fsrs_progress, &counters, true);
+            });
+        }
+
+        let parameters = compute_fsrs_parameters(ComputeParametersInput {
+            train_set: items,
+            progress: Some(fsrs_progress.clone()),
+            enable_short_term,
+            num_relearning_steps: None,
+            ..Default::default()
+        })
+        .unwrap();
+        monitor_done.store(true, Ordering::Release);
+        if let Some(counters) = &counters {
+            copy_progress(&fsrs_progress, counters, true);
+        }
+
+        self.model = FSRS::new(&parameters).unwrap();
         parameters
     }
 
@@ -152,16 +220,18 @@ impl FSRSwasm {
         difficulty: Option<f32>,
         desired_retention: f32,
         days_elapsed: u32,
-    ) -> NextStates {
+    ) -> JsValue {
         let current_memory_state = stability.and_then(|stability| {
             difficulty.map(|difficulty| MemoryState {
                 stability,
                 difficulty,
             })
         });
-        self.model
+        let next_states = self
+            .model
             .next_states(current_memory_state, desired_retention, days_elapsed)
-            .unwrap()
+            .unwrap();
+        serde_wasm_bindgen::to_value(&next_states).unwrap()
     }
 
     // Deserialization is done here.

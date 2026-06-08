@@ -27,6 +27,9 @@ export default defineConfig(() => {
 		build: {
 			target: 'esnext',
 		},
+		worker: {
+			format: 'es',
+		},
 		optimizeDeps: {
 			// If you use Vite and install `fsrs-browser` from npm, you'll need the below `exclude` for reasons given here https://github.com/vitejs/vite/issues/8427
 			// since `fsrs-browser` uses wasm-pack. Without it, you'll run into the below error messages:
