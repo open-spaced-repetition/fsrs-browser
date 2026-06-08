@@ -28,6 +28,12 @@ test('check next interval', async ({ page }) => {
 	expect(rounded).toEqual(2)
 })
 
+test('check extended api', async ({ page }) => {
+	await goHome(page)
+	await page.getByRole('button', { name: 'Check Extended API' }).click()
+	await expect(page.locator('#extendedApiPassedResult')).toHaveText('Passed!')
+})
+
 test('check progress and parameters', async ({ page }) => {
 	await goHome(page)
 	await page.getByRole('button', { name: 'Train with example file' }).click()
