@@ -1,5 +1,11 @@
 import { Accessor, Setter, createSignal, type Component } from 'solid-js'
-import init, { Fsrs, getProgress } from 'fsrs-browser/fsrs_browser'
+import init, {
+	DEFAULT_PARAMETERS,
+	Fsrs,
+	TrainingConfig,
+	checkAndFillParameters,
+	getProgress,
+} from 'fsrs-browser/fsrs_browser'
 import Train from './train.ts?worker'
 import { testSerialization } from './testSerialization'
 import { ProgressMessage } from './train'
@@ -12,6 +18,9 @@ let [parameters, setParameters] = createSignal('')
 let [serializationPassed, setSerializationPassed] = createSignal<
 	boolean | null
 >(null)
+let [extendedApiPassed, setExtendedApiPassed] = createSignal<boolean | null>(
+	null,
+)
 
 const App: Component = () => {
 	return (
@@ -103,7 +112,91 @@ const App: Component = () => {
 						? 'Passed!'
 						: 'Failed!'}
 			</div>
+			<button
+				onclick={async () => {
+					setExtendedApiPassed(await checkExtendedApi())
+				}}
+			>
+				Check Extended API
+			</button>
+			<div id='extendedApiPassedResult' style={{ height: '5em' }}>
+				{extendedApiPassed() === null
+					? ''
+					: extendedApiPassed()
+						? 'Passed!'
+						: 'Failed!'}
+			</div>
 		</div>
+	)
+}
+
+interface MemoryState {
+	stability: number
+	difficulty: number
+}
+
+async function checkExtendedApi(): Promise<boolean> {
+	await init()
+	const defaults = DEFAULT_PARAMETERS()
+	const filled = checkAndFillParameters()
+
+	const fsrs = new Fsrs(defaults)
+	const sm2 = fsrs.memoryStateFromSm2(2.5, 10, 0.9)
+	const ratings = new Uint32Array([4, 3, 4, 3, 1, 3])
+	const deltaTs = new Uint32Array([0, 1, 0, 2, 0, 1])
+	const lengths = new Uint32Array([2, 2, 2])
+	const emptyStartingStates = new Float32Array([
+		Number.NaN,
+		Number.NaN,
+		Number.NaN,
+		Number.NaN,
+		Number.NaN,
+		Number.NaN,
+	])
+	const batch = fsrs.memoryStateBatch(
+		ratings,
+		deltaTs,
+		lengths,
+		emptyStartingStates,
+	) as MemoryState[]
+	const historical = fsrs.historicalMemoryStates(
+		new Uint32Array([4, 3]),
+		new Uint32Array([0, 1]),
+		sm2,
+	) as MemoryState[]
+	const historicalBatch = fsrs.historicalMemoryStateBatch(
+		ratings,
+		deltaTs,
+		lengths,
+	) as MemoryState[][]
+
+	const trainingConfig = new TrainingConfig()
+	trainingConfig.numEpochs = 1
+	trainingConfig.batchSize = 2
+	trainingConfig.seed = 2023n
+	const parameters = fsrs.computeParameters(
+		ratings,
+		deltaTs,
+		lengths,
+		null,
+		true,
+		new BigInt64Array([1n, 2n, 3n]),
+		1,
+		trainingConfig,
+	)
+	const nextInterval = fsrs.nextInterval(undefined, 0.9, 3)
+	fsrs.free()
+
+	return (
+		defaults.length === 21 &&
+		filled.length === 21 &&
+		sm2.length === 2 &&
+		batch.length === 3 &&
+		batch.every((state) => Number.isFinite(state.stability)) &&
+		historical.length === 3 &&
+		historicalBatch.length === 3 &&
+		parameters.length === 21 &&
+		Number.isFinite(nextInterval)
 	)
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "fsrs-browser"
-version = "5.2.0"
+version = "6.6.0"
 authors = ["Open Spaced Repetition"]
 categories = ["algorithms", "science"]
 edition = "2021"
@@ -19,24 +19,15 @@ crate-type = ["cdylib"]
 [dependencies]
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1" }
-getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
 log = { default-features = false, version = "0.4.25" }
-wasm-bindgen = "0.2.100"
+wasm-bindgen = "=0.2.100"
+wasm-bindgen-rayon = "1.3.0"
+rayon = "1.12.0"
+serde-wasm-bindgen = "0.6"
 
 [dependencies.fsrs]
-path = "./fsrs-rs"
-# path = "../fsrs-rs"
-# git = "https://github.com/open-spaced-repetition/fsrs-rs.git"
-# rev = "5d67e1c0c82e56b49e3c9b3403da4ce703823b5f"
-
-[dependencies.burn]
-path = "./burn/crates/burn"
-# path = "../burn/crates/burn"
-# version = "0.10.0"
-# git = "https://github.com/burn-rs/burn.git"
-# rev = "d06cc2f239c53e7f88dad7e0b2bbe6757a17d66c"
-default-features = false
-features = ["std", "train", "autodiff", "browser", "ndarray"]
+version = "6.6.0"
 
 [profile.release]
 codegen-units = 1

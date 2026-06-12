@@ -1,18 +1,28 @@
 #!/bin/bash
 
-rsVersion=$(cd fsrs-rs && cat Cargo.toml |
-	grep --extended-regexp "^version =" |
-	grep --extended-regexp --only-matching "[0-9]+\.[0-9]+.[0-9]+[-\.\+a-zA-Z0-9]*" |
-	head --lines=1)
+rsVersion=$(awk '
+	/^\[dependencies\.fsrs\]$/ { in_fsrs = 1; next }
+	/^\[/ { in_fsrs = 0 }
+	in_fsrs && /^version[[:space:]]*=/ { print; exit }
+	/^fsrs[[:space:]]*=/ { print; exit }
+' Cargo.toml |
+	sed -E 's/.*version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/; s/^[^"]*"([^"]+)".*/\1/' |
+	grep -E -o "[0-9]+\.[0-9]+\.[0-9]+[-.\+a-zA-Z0-9]*" |
+	head -n 1)
+
+if [[ -z $rsVersion ]]; then
+	echo "Unable to find fsrs dependency version in Cargo.toml" >&2
+	exit 1
+fi
 
 # https://stackoverflow.com/a/6253883
 rsMajor=$(echo $rsVersion | cut -d. -f1)
 rsMinor=$(echo $rsVersion | cut -d. -f2)
 
 oldVersion=$(cat Cargo.toml |
-	grep --extended-regexp "^version =" |
-	grep --extended-regexp --only-matching "[0-9]+\.[0-9]+.[0-9]+[-\.\+a-zA-Z0-9]*" |
-	head --lines=1)
+	grep -E "^version =" |
+	grep -E -o "[0-9]+\.[0-9]+\.[0-9]+[-.\+a-zA-Z0-9]*" |
+	head -n 1)
 
 oldMajor=$(echo $oldVersion | cut -d. -f1)
 oldMinor=$(echo $oldVersion | cut -d. -f2)
@@ -24,5 +34,6 @@ if [[ $rsMajor == $oldMajor && $rsMinor == $oldMinor ]]; then
 	newVersion="$rsMajor.$rsMinor.$revision"
 fi
 
-# https://github.com/rust-lang/cargo/issues/6583#issue-401816934
-sed -i -e "s/^version = .*/version = \"$newVersion\"/" Cargo.toml
+tmpFile=$(mktemp "${TMPDIR:-/tmp}/fsrs-browser-cargo-toml.XXXXXX")
+sed -E "s/^version = .*/version = \"$newVersion\"/" Cargo.toml >"$tmpFile"
+mv "$tmpFile" Cargo.toml
