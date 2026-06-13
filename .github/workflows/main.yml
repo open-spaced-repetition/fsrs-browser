@@ -104,6 +104,9 @@ jobs:
       - name: Prepublish
         run: ./prepublish.sh
 
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@11.17.0
+
       - name: Publish
         working-directory: pkg
         run: npm publish --provenance --access public
