@@ -10,6 +10,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
 
     steps:
       - name: Check out
@@ -103,7 +106,7 @@ jobs:
       - name: Publish
         uses: JS-DevTools/npm-publish@v3
         with:
-          token: ${{ secrets.NPM_TOKEN }}
+          provenance: true
           package: pkg
 
       - name: Compute tag
