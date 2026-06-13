@@ -55,6 +55,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: "sandbox/.nvmrc"
+          registry-url: "https://registry.npmjs.org"
           cache: pnpm
           cache-dependency-path: "sandbox/pnpm-lock.yaml"
 
@@ -104,10 +105,8 @@ jobs:
         run: ./prepublish.sh
 
       - name: Publish
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          provenance: true
-          package: pkg
+        working-directory: pkg
+        run: npm publish --provenance --access public
 
       - name: Compute tag
         id: compute-tag
