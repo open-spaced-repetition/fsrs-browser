@@ -42,6 +42,8 @@ export default defineConfig({
 			use: { ...devices['Desktop Firefox'] },
 		},
 
+		// webkit is intentionally omitted: wasm-bindgen-rayon needs cross-origin
+		// isolation + SharedArrayBuffer, which Playwright's WebKit doesn't support.
 		// https://github.com/RReverser/wasm-bindgen-rayon/blob/a947bdce8ef1e4b5456b349bd5b3763fe2516e25/test/playwright.config.mjs#L28
 		// {
 		//   name: 'webkit',
@@ -63,10 +65,11 @@ export default defineConfig({
 		//   name: 'Microsoft Edge',
 		//   use: { ...devices['Desktop Edge'], channel: 'msedge' },
 		// },
-		{
-			name: 'Google Chrome',
-			use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-		},
+		// covered by chromium
+		// {
+		// 	name: 'Google Chrome',
+		// 	use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+		// },
 	],
 
 	/* Run your local dev server before starting the tests */

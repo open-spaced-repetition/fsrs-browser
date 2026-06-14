@@ -31,7 +31,7 @@ jobs:
         run: rustup component add rust-src --toolchain nightly-2025-04-25-x86_64-unknown-linux-gnu
 
       - name: Set up cargo cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -76,9 +76,17 @@ jobs:
         working-directory: ./sandbox
         run: pnpm install
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('sandbox/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Install Playwright Browsers
         working-directory: ./sandbox
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install --with-deps chromium firefox
 
       - name: Build Dev
         run: ./dev.sh
