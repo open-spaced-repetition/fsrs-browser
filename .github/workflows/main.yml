@@ -115,12 +115,28 @@ jobs:
       - name: Upgrade npm for OIDC trusted publishing
         run: npm install -g npm@11.17.0
 
+      - name: Check whether this version is already published
+        id: version-check
+        working-directory: pkg
+        run: |
+          NAME=$(npm pkg get name | tr -d '"')
+          VERSION=$(npm pkg get version | tr -d '"')
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already published; skipping publish + tag."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$NAME@$VERSION is new; will publish."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish
+        if: steps.version-check.outputs.publish == 'true'
         working-directory: pkg
         run: npm publish --provenance --access public
 
       - name: Compute tag
         id: compute-tag
+        if: steps.version-check.outputs.publish == 'true'
         run: |
           set -e
           TAG=$(cat Cargo.toml \
@@ -130,6 +146,7 @@ jobs:
           echo "tag=v$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Tag repo using version specified in Cargo.toml
+        if: steps.version-check.outputs.publish == 'true'
         uses: djordon/git-autotag-action@v0.7.0-beta2
         with:
           tag: ${{ steps.compute-tag.outputs.tag }}
