@@ -10,13 +10,39 @@ use anki::{anki_to_fsrs, to_revlog_entry};
 use fsrs::{
     check_and_fill_parameters as check_fsrs_parameters,
     compute_parameters as compute_fsrs_parameters, CombinedProgressState, ComputeParametersInput,
-    FSRSItem, FSRSReview, MemoryState, TrainingConfig as FsrsTrainingConfig, DEFAULT_PARAMETERS,
-    FSRS,
+    ComputeParametersVersion, FSRSItem, FSRSReview, MemoryState, ModelVersion as FsrsModelVersion,
+    TrainingConfig as FsrsTrainingConfig, DEFAULT_PARAMETERS, FSRS, FSRS6_DEFAULT_PARAMETERS,
 };
 #[cfg(debug_assertions)]
 use log::{info, warn};
 use wasm_bindgen::prelude::*;
 pub use wasm_bindgen_rayon::init_thread_pool;
+
+/// The FSRS algorithm version.
+#[wasm_bindgen]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ModelVersion {
+    Fsrs6 = 6,
+    Fsrs7 = 7,
+}
+
+impl From<FsrsModelVersion> for ModelVersion {
+    fn from(version: FsrsModelVersion) -> Self {
+        match version {
+            FsrsModelVersion::Fsrs6 => Self::Fsrs6,
+            FsrsModelVersion::Fsrs7 => Self::Fsrs7,
+        }
+    }
+}
+
+impl From<ModelVersion> for ComputeParametersVersion {
+    fn from(version: ModelVersion) -> Self {
+        match version {
+            ModelVersion::Fsrs6 => Self::Fsrs6,
+            ModelVersion::Fsrs7 => Self::Fsrs7,
+        }
+    }
+}
 
 #[wasm_bindgen]
 #[derive(Debug, Clone, Default)]
@@ -26,6 +52,7 @@ pub struct TrainingConfig {
 
 #[wasm_bindgen]
 impl TrainingConfig {
+    /// `numEpochs` and `learningRate` default to 0, which means the trained model version's default.
     #[wasm_bindgen(constructor)]
     pub fn new() -> TrainingConfig {
         Self::default()
@@ -54,6 +81,7 @@ impl TrainingConfig {
         config
     }
 
+    /// 0 means the trained model version's default (FSRS-7: 9, FSRS-6: 5).
     #[wasm_bindgen(getter, js_name = numEpochs)]
     pub fn num_epochs(&self) -> usize {
         self.config.num_epochs
@@ -85,6 +113,7 @@ impl TrainingConfig {
         self.config.seed = value;
     }
 
+    /// 0 means the trained model version's default (FSRS-7: 0.0118, FSRS-6: 0.04).
     #[wasm_bindgen(getter, js_name = learningRate)]
     pub fn learning_rate(&self) -> f64 {
         self.config.learning_rate
@@ -149,7 +178,13 @@ impl Progress {
         }
     }
 
-    /// Memory will hold [items_processed, items_total]
+    /// Returns another handle to the same counters. Training consumes the handle it receives.
+    #[wasm_bindgen(js_name = clone)]
+    pub fn clone_handle(&self) -> Progress {
+        self.clone()
+    }
+
+    /// Points to [items_processed, items_total] while a handle to these counters is alive.
     pub fn pointer(&self) -> *const u32 {
         self.counters.as_ptr().cast()
     }
@@ -161,9 +196,16 @@ impl Default for Progress {
     }
 }
 
+/// FSRS-7 default parameters (34 values).
 #[wasm_bindgen(js_name = DEFAULT_PARAMETERS)]
 pub fn default_parameters() -> Vec<f32> {
     DEFAULT_PARAMETERS.to_vec()
+}
+
+/// FSRS-6 default parameters (21 values).
+#[wasm_bindgen(js_name = FSRS6_DEFAULT_PARAMETERS)]
+pub fn fsrs6_default_parameters() -> Vec<f32> {
+    FSRS6_DEFAULT_PARAMETERS.to_vec()
 }
 
 #[wasm_bindgen(js_name = checkAndFillParameters)]
@@ -204,7 +246,16 @@ impl FSRSwasm {
         Self { model }
     }
 
+    /// The algorithm version of the current parameters: 34 parameters are FSRS-7, 17/19/21 are FSRS-6.
+    #[wasm_bindgen(getter)]
+    pub fn version(&self) -> ModelVersion {
+        self.model.version().into()
+    }
+
     /// `minute_offset` should be the `user's timezone offset from UTC` minus `Anki's "next day starts at"`, in minutes.
+    /// FSRS-6 uses it to count whole local days between reviews; FSRS-7 uses fractional days between review timestamps.
+    /// `model_version` selects the version to train and defaults to the current model's `version`.
+    /// `enable_sched_penalties` enables FSRS-7 schedule penalties and defaults to false.
     #[wasm_bindgen(js_name = computeParametersAnki)]
     #[allow(clippy::too_many_arguments)]
     pub fn compute_parameters_anki(
@@ -218,9 +269,16 @@ impl FSRSwasm {
         enable_short_term: bool,
         num_relearning_steps: Option<usize>,
         training_config: Option<TrainingConfig>,
+        model_version: Option<ModelVersion>,
+        enable_sched_penalties: Option<bool>,
     ) -> Vec<f32> {
+        let model_version = model_version.unwrap_or_else(|| self.version());
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
-        let items = anki_to_fsrs(revlog_entries, minute_offset);
+        let items = anki_to_fsrs(
+            revlog_entries,
+            minute_offset,
+            model_version == ModelVersion::Fsrs7,
+        );
         self.train_and_set_parameters(
             items,
             progress,
@@ -228,21 +286,28 @@ impl FSRSwasm {
             None,
             num_relearning_steps,
             training_config,
+            model_version,
+            enable_sched_penalties,
         )
     }
 
+    /// `delta_ts`: elapsed days may be fractional; FSRS-6 rounds them to whole days, FSRS-7 keeps the fraction.
+    /// `model_version` selects the version to train and defaults to the current model's `version`.
+    /// `enable_sched_penalties` enables FSRS-7 schedule penalties and defaults to false.
     #[wasm_bindgen(js_name = computeParameters)]
     #[allow(clippy::too_many_arguments)]
     pub fn compute_parameters(
         &mut self,
         ratings: &[u32],
-        delta_ts: &[u32],
+        delta_ts: &[f32],
         lengths: &[u32],
         progress: Option<Progress>,
         enable_short_term: bool,
         card_ids: Option<Vec<i64>>,
         num_relearning_steps: Option<usize>,
         training_config: Option<TrainingConfig>,
+        model_version: Option<ModelVersion>,
+        enable_sched_penalties: Option<bool>,
     ) -> Vec<f32> {
         let items = Self::to_fsrs_items(ratings, delta_ts, lengths);
         self.train_and_set_parameters(
@@ -252,6 +317,8 @@ impl FSRSwasm {
             card_ids,
             num_relearning_steps,
             training_config,
+            model_version.unwrap_or_else(|| self.version()),
+            enable_sched_penalties,
         )
     }
 
@@ -264,6 +331,8 @@ impl FSRSwasm {
         card_ids: Option<Vec<i64>>,
         num_relearning_steps: Option<usize>,
         training_config: Option<TrainingConfig>,
+        model_version: ModelVersion,
+        enable_sched_penalties: Option<bool>,
     ) -> Vec<f32> {
         #[cfg(debug_assertions)]
         warn!("You're training with a debug build... this is going to take a *long* time.");
@@ -289,6 +358,8 @@ impl FSRSwasm {
             card_ids,
             progress: Some(fsrs_progress.clone()),
             enable_short_term,
+            enable_sched_penalties: enable_sched_penalties.unwrap_or(false),
+            model_version: model_version.into(),
             num_relearning_steps,
             training_config: training_config.map(|config| config.as_fsrs()),
         })
@@ -303,11 +374,13 @@ impl FSRSwasm {
     }
 
     #[wasm_bindgen(js_name = memoryState)]
-    /// Returns an array of 2 elements: `[stability, difficulty]`
+    /// `delta_ts`: elapsed days may be fractional; FSRS-6 rounds them to whole days, FSRS-7 keeps the fraction.
+    /// `starting_state` is `[stability, difficulty]` or `[stability, difficulty, stabilityFast]`.
+    /// Returns an array of 3 elements: `[stability, difficulty, stabilityFast]`
     pub fn memory_state(
         &self,
         ratings: &[u32],
-        delta_ts: &[u32],
+        delta_ts: &[f32],
         starting_state: Option<Vec<f32>>,
     ) -> Vec<f32> {
         assert!(
@@ -331,10 +404,11 @@ impl FSRSwasm {
 
     fn _memory_state(&self, item: FSRSItem, starting_state: Option<MemoryState>) -> Vec<f32> {
         let state = self.model.memory_state(item, starting_state).unwrap();
-        vec![state.stability, state.difficulty]
+        vec![state.stability, state.difficulty, state.stability_fast]
     }
 
     #[wasm_bindgen(js_name = memoryStateFromSm2)]
+    /// Returns an array of 3 elements: `[stability, difficulty, stabilityFast]`
     pub fn memory_state_from_sm2(
         &self,
         ease_factor: f32,
@@ -345,14 +419,17 @@ impl FSRSwasm {
             .model
             .memory_state_from_sm2(ease_factor, interval, sm2_retention)
             .unwrap();
-        vec![state.stability, state.difficulty]
+        vec![state.stability, state.difficulty, state.stability_fast]
     }
 
     #[wasm_bindgen(js_name = memoryStateBatch)]
+    /// `delta_ts`: elapsed days may be fractional; FSRS-6 rounds them to whole days, FSRS-7 keeps the fraction.
+    /// `starting_states` is a flat array with 2 (`[stability, difficulty]`) or
+    /// 3 (`[stability, difficulty, stabilityFast]`) elements per item; an all-NaN item means no starting state.
     pub fn memory_state_batch(
         &self,
         ratings: &[u32],
-        delta_ts: &[u32],
+        delta_ts: &[f32],
         lengths: &[u32],
         starting_states: Option<Vec<f32>>,
     ) -> JsValue {
@@ -366,10 +443,12 @@ impl FSRSwasm {
     }
 
     #[wasm_bindgen(js_name = historicalMemoryStates)]
+    /// `delta_ts`: elapsed days may be fractional; FSRS-6 rounds them to whole days, FSRS-7 keeps the fraction.
+    /// `starting_state` has the same format as in `memoryState`.
     pub fn historical_memory_states(
         &self,
         ratings: &[u32],
-        delta_ts: &[u32],
+        delta_ts: &[f32],
         starting_state: Option<Vec<f32>>,
     ) -> JsValue {
         assert!(
@@ -396,10 +475,12 @@ impl FSRSwasm {
     }
 
     #[wasm_bindgen(js_name = historicalMemoryStateBatch)]
+    /// `delta_ts`: elapsed days may be fractional; FSRS-6 rounds them to whole days, FSRS-7 keeps the fraction.
+    /// `starting_states` has the same format as in `memoryStateBatch`.
     pub fn historical_memory_state_batch(
         &self,
         ratings: &[u32],
-        delta_ts: &[u32],
+        delta_ts: &[f32],
         lengths: &[u32],
         starting_states: Option<Vec<f32>>,
     ) -> JsValue {
@@ -415,7 +496,8 @@ impl FSRSwasm {
 
     #[wasm_bindgen(js_name = memoryStateAnki)]
     /// `minute_offset` should be the `user's timezone offset from UTC` minus `Anki's "next day starts at"`, in minutes.
-    /// Returns an array of 2 elements: `[stability, difficulty]`
+    /// FSRS-6 uses it to count whole local days between reviews; FSRS-7 uses fractional days between review timestamps.
+    /// Returns an array of 3 elements: `[stability, difficulty, stabilityFast]`
     pub fn memory_state_anki(
         &self,
         minute_offset: i32,
@@ -434,9 +516,13 @@ impl FSRSwasm {
         assert_eq!(len, 1, "Expected 1 card, but was given {len}");
 
         let revlog_entries = to_revlog_entry(cids, eases, ids, types);
-        anki_to_fsrs(revlog_entries, minute_offset)
-            .pop()
-            .map(|item| self._memory_state(item, None))
+        anki_to_fsrs(
+            revlog_entries,
+            minute_offset,
+            self.version() == ModelVersion::Fsrs7,
+        )
+        .pop()
+        .map(|item| self._memory_state(item, None))
     }
 
     #[wasm_bindgen(js_name = nextInterval)]
@@ -451,29 +537,33 @@ impl FSRSwasm {
     }
 
     #[wasm_bindgen(js_name = nextStates)]
+    /// `days_elapsed`: elapsed days may be fractional; FSRS-6 rounds them to whole days, FSRS-7 keeps the fraction.
+    /// `stability_fast` defaults to `stability`.
     pub fn next_states(
         &self,
         stability: Option<f32>,
         difficulty: Option<f32>,
         desired_retention: f32,
-        days_elapsed: u32,
+        days_elapsed: f32,
+        stability_fast: Option<f32>,
     ) -> JsValue {
         let current_memory_state = stability.and_then(|stability| {
             difficulty.map(|difficulty| MemoryState {
                 stability,
                 difficulty,
+                stability_fast: stability_fast.unwrap_or(stability),
             })
         });
         let next_states = self
             .model
-            .next_states(current_memory_state, desired_retention, days_elapsed)
+            .next_states_with_elapsed_days(current_memory_state, desired_retention, days_elapsed)
             .unwrap();
         serde_wasm_bindgen::to_value(&next_states).unwrap()
     }
 
     // Deserialization is done here.
     // An example serialization is done at `./sandbox/src/testSerialization.ts`.
-    fn to_fsrs_items(ratings: &[u32], delta_ts: &[u32], lengths: &[u32]) -> Vec<FSRSItem> {
+    fn to_fsrs_items(ratings: &[u32], delta_ts: &[f32], lengths: &[u32]) -> Vec<FSRSItem> {
         assert!(
             ratings.len() == delta_ts.len(),
             "`ratings` has {} elements and `delta_ts` has {} elements, but they should be equal.",
@@ -502,18 +592,28 @@ impl FSRSwasm {
             .collect::<Vec<_>>()
     }
 
-    fn to_optional_memory_state(state: Option<Vec<f32>>) -> Option<MemoryState> {
-        state.map(|state| {
-            assert_eq!(
+    // Without `stabilityFast`, it falls back to `stability`, like upstream's `next_interval`.
+    fn to_memory_state(state: &[f32]) -> MemoryState {
+        match *state {
+            [stability, difficulty] => MemoryState {
+                stability,
+                difficulty,
+                stability_fast: stability,
+            },
+            [stability, difficulty, stability_fast] => MemoryState {
+                stability,
+                difficulty,
+                stability_fast,
+            },
+            _ => panic!(
+                "A memory state must contain 2 or 3 elements: [stability, difficulty] or [stability, difficulty, stabilityFast], but has {}",
                 state.len(),
-                2,
-                "A memory state must contain exactly 2 elements: [stability, difficulty]",
-            );
-            MemoryState {
-                stability: state[0],
-                difficulty: state[1],
-            }
-        })
+            ),
+        }
+    }
+
+    fn to_optional_memory_state(state: Option<Vec<f32>>) -> Option<MemoryState> {
+        state.map(|state| Self::to_memory_state(&state))
     }
 
     fn to_optional_memory_states(
@@ -523,21 +623,19 @@ impl FSRSwasm {
         match states {
             None => vec![None; item_count],
             Some(states) => {
+                let stride = if states.len() == item_count * 3 { 3 } else { 2 };
                 assert_eq!(
                     states.len(),
-                    item_count * 2,
-                    "Starting states must contain 2 elements per item: [stability, difficulty]",
+                    item_count * stride,
+                    "Starting states must contain 2 or 3 elements per item: [stability, difficulty] or [stability, difficulty, stabilityFast]",
                 );
                 states
-                    .chunks_exact(2)
+                    .chunks_exact(stride)
                     .map(|state| {
-                        if state[0].is_nan() && state[1].is_nan() {
+                        if state.iter().all(|value| value.is_nan()) {
                             None
                         } else {
-                            Some(MemoryState {
-                                stability: state[0],
-                                difficulty: state[1],
-                            })
+                            Some(Self::to_memory_state(state))
                         }
                     })
                     .collect()
@@ -547,18 +645,18 @@ impl FSRSwasm {
 
     #[wasm_bindgen(js_name = testSerialization)]
     #[cfg(debug_assertions)] // only include this "test" in debug builds
-    pub fn test_serialization(ratings: &[u32], delta_ts: &[u32], lengths: &[u32]) {
+    pub fn test_serialization(ratings: &[u32], delta_ts: &[f32], lengths: &[u32]) {
         let actual = Self::to_fsrs_items(ratings, delta_ts, lengths);
         let expected = vec![
             FSRSItem {
                 reviews: vec![
                     FSRSReview {
                         rating: 4,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 5,
+                        delta_t: 5.0,
                     },
                 ],
             },
@@ -566,15 +664,15 @@ impl FSRSwasm {
                 reviews: vec![
                     FSRSReview {
                         rating: 4,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 5,
+                        delta_t: 5.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 11,
+                        delta_t: 11.0,
                     },
                 ],
             },
@@ -582,11 +680,11 @@ impl FSRSwasm {
                 reviews: vec![
                     FSRSReview {
                         rating: 4,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 2,
+                        delta_t: 2.0,
                     },
                 ],
             },
@@ -594,15 +692,15 @@ impl FSRSwasm {
                 reviews: vec![
                     FSRSReview {
                         rating: 4,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 2,
+                        delta_t: 2.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 6,
+                        delta_t: 6.0,
                     },
                 ],
             },
@@ -610,19 +708,19 @@ impl FSRSwasm {
                 reviews: vec![
                     FSRSReview {
                         rating: 4,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 2,
+                        delta_t: 2.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 6,
+                        delta_t: 6.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 16,
+                        delta_t: 16.0,
                     },
                 ],
             },
@@ -630,23 +728,23 @@ impl FSRSwasm {
                 reviews: vec![
                     FSRSReview {
                         rating: 4,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 2,
+                        delta_t: 2.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 6,
+                        delta_t: 6.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 16,
+                        delta_t: 16.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 39,
+                        delta_t: 39.0,
                     },
                 ],
             },
@@ -654,11 +752,11 @@ impl FSRSwasm {
                 reviews: vec![
                     FSRSReview {
                         rating: 1,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 1,
-                        delta_t: 1,
+                        delta_t: 1.0,
                     },
                 ],
             },
@@ -666,15 +764,15 @@ impl FSRSwasm {
                 reviews: vec![
                     FSRSReview {
                         rating: 1,
-                        delta_t: 0,
+                        delta_t: 0.0,
                     },
                     FSRSReview {
                         rating: 1,
-                        delta_t: 1,
+                        delta_t: 1.0,
                     },
                     FSRSReview {
                         rating: 3,
-                        delta_t: 1,
+                        delta_t: 1.0,
                     },
                 ],
             },
