@@ -5,7 +5,7 @@ pub struct RevlogEntry {
     pub id: i64,
     pub cid: i64,
     pub button_chosen: u8,
-    pub last_interval: i32,
+    pub last_interval: f32,
     pub review_kind: RevlogReviewKind,
 }
 
@@ -55,16 +55,22 @@ fn local_day_index(timestamp_millis: i64, minute_offset: i32) -> i64 {
     (timestamp_millis + i64::from(minute_offset) * 60 * 1000).div_euclid(86_400_000)
 }
 
+// FSRS-7 uses fractional days between review timestamps; FSRS-6 uses whole local days.
 fn convert_to_fsrs_items(
     mut entries: Vec<RevlogEntry>,
     minute_offset: i32,
+    fractional_days: bool,
 ) -> Vec<(i64, FSRSItem)> {
     entries = remove_revlog_before_last_first_learn(entries);
 
     for i in 1..entries.len() {
-        let current = local_day_index(entries[i].id, minute_offset);
-        let previous = local_day_index(entries[i - 1].id, minute_offset);
-        entries[i].last_interval = (current - previous) as i32;
+        entries[i].last_interval = if fractional_days {
+            ((entries[i].id - entries[i - 1].id).max(0) as f64 / 86_400_000.0) as f32
+        } else {
+            let current = local_day_index(entries[i].id, minute_offset);
+            let previous = local_day_index(entries[i - 1].id, minute_offset);
+            (current - previous) as f32
+        };
     }
 
     entries
@@ -77,12 +83,16 @@ fn convert_to_fsrs_items(
                 .take(idx + 1)
                 .map(|review| FSRSReview {
                     rating: review.button_chosen as u32,
-                    delta_t: review.last_interval as u32,
+                    delta_t: review.last_interval,
                 })
                 .collect();
             (entry.id, FSRSItem { reviews })
         })
-        .filter(|(_, item)| item.reviews.last().is_some_and(|review| review.delta_t > 0))
+        .filter(|(_, item)| {
+            item.reviews
+                .last()
+                .is_some_and(|review| review.delta_t > 0.0)
+        })
         .collect()
 }
 
@@ -94,7 +104,7 @@ pub fn to_revlog_entry(cids: &[i64], eases: &[u8], ids: &[i64], types: &[u8]) ->
             id: ids[i],
             cid: cids[i],
             button_chosen: eases[i],
-            last_interval: 0,
+            last_interval: 0.0,
             review_kind: types[i].into(),
         })
         .collect::<Vec<_>>();
@@ -102,14 +112,22 @@ pub fn to_revlog_entry(cids: &[i64], eases: &[u8], ids: &[i64], types: &[u8]) ->
     entries
 }
 
-pub fn anki_to_fsrs(revlogs: Vec<RevlogEntry>, minute_offset: i32) -> Vec<FSRSItem> {
+pub fn anki_to_fsrs(
+    revlogs: Vec<RevlogEntry>,
+    minute_offset: i32,
+    fractional_days: bool,
+) -> Vec<FSRSItem> {
     let mut items = Vec::<(i64, FSRSItem)>::new();
     let mut current_card = Vec::<RevlogEntry>::new();
     let mut current_cid = None;
 
     for revlog in revlogs {
         if current_cid.is_some_and(|cid| cid != revlog.cid) {
-            items.extend(convert_to_fsrs_items(current_card, minute_offset));
+            items.extend(convert_to_fsrs_items(
+                current_card,
+                minute_offset,
+                fractional_days,
+            ));
             current_card = Vec::new();
         }
         current_cid = Some(revlog.cid);
@@ -117,7 +135,11 @@ pub fn anki_to_fsrs(revlogs: Vec<RevlogEntry>, minute_offset: i32) -> Vec<FSRSIt
     }
 
     if !current_card.is_empty() {
-        items.extend(convert_to_fsrs_items(current_card, minute_offset));
+        items.extend(convert_to_fsrs_items(
+            current_card,
+            minute_offset,
+            fractional_days,
+        ));
     }
 
     items.sort_by_key(|(id, _)| *id);

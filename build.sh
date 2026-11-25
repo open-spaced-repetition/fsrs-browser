@@ -32,8 +32,8 @@ wasm-pack build --out-dir pkg --$1 --target web --no-default-features
 JSFILE='./pkg/fsrs_browser.js'
 grep -qF -- "export function getProgress(wasmMemoryBuffer, pointer) {" "$JSFILE" || echo '
 /**
-* Do not use this function after the completion of `computeParameters` or `computeParametersAnki`.
-* Data returned after completion will be random!
+* Keep a Progress handle alive while reading its counters. Pass progress.clone()
+* to training to read the final counts before freeing the retained handle.
 */
 export function getProgress(wasmMemoryBuffer, pointer) {
     // The progress vec is length 2. Grep 2291AF52-BEE4-4D54-BAD0-6492DFE368D8
@@ -48,8 +48,8 @@ export function getProgress(wasmMemoryBuffer, pointer) {
 TYPEFILE='./pkg/fsrs_browser.d.ts'
 grep -qF -- "export function getProgress(wasmMemoryBuffer: ArrayBuffer, pointer: number): {" "$TYPEFILE" || echo '
 /**
-* Do not use this function after the completion of `computeParameters` or `computeParametersAnki`.
-* Data returned after completion will be random!
+* Keep a Progress handle alive while reading its counters. Pass progress.clone()
+* to training to read the final counts before freeing the retained handle.
 */
 export function getProgress(wasmMemoryBuffer: ArrayBuffer, pointer: number): {
     itemsProcessed: number;

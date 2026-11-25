@@ -6,7 +6,7 @@ export async function testSerialization() {
 	const ratings = new Uint32Array(
 		testItems.flatMap((item) => item.reviews.map((r) => r.rating)),
 	)
-	const deltaTs = new Uint32Array(
+	const deltaTs = new Float32Array(
 		testItems.flatMap((item) => item.reviews.map((r) => r.delta_t)),
 	)
 	if ('testSerialization' in Fsrs) {

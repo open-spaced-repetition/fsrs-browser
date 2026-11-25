@@ -1,6 +1,7 @@
 import init, {
 	initThreadPool,
 	Fsrs,
+	type ModelVersion,
 	Progress,
 	TrainingConfig,
 	InitOutput,
@@ -17,19 +18,25 @@ const sqlJs = initSqlJs({
 
 let initOutput: InitOutput = null
 
-self.onmessage = async (event: MessageEvent<unknown>) => {
+export interface TrainingRequest {
+	data: ArrayBuffer | File
+	version: ModelVersion
+}
+
+self.onmessage = async (event: MessageEvent<TrainingRequest>) => {
 	if (initOutput == null) {
 		initOutput = await init()
 		await initThreadPool(navigator.hardwareConcurrency)
 	}
-	if (event.data instanceof ArrayBuffer) {
-		await loadSqliteAndTrain(event.data)
-	} else if (event.data instanceof File) {
-		loadCsvAndTrain(event.data)
+	const { data, version } = event.data
+	if (data instanceof ArrayBuffer) {
+		await loadSqliteAndTrain(data, version)
+	} else if (data instanceof File) {
+		loadCsvAndTrain(data, version)
 	}
 }
 
-async function loadSqliteAndTrain(ab: ArrayBuffer) {
+async function loadSqliteAndTrain(ab: ArrayBuffer, version: ModelVersion) {
 	console.time('load time')
 	const db = await getDb(ab)
 	let baseQuery = `FROM revlog
@@ -66,7 +73,7 @@ async function loadSqliteAndTrain(ab: ArrayBuffer) {
 		}
 		trainQuery.free()
 		console.timeEnd('load time')
-		computeParameters(cids, eases, ids, types)
+		computeParameters(cids, eases, ids, types, version)
 	} finally {
 		db.close()
 	}
@@ -82,7 +89,7 @@ interface ParseData {
 
 // An example CSV may be obtained from https://github.com/open-spaced-repetition/fsrs4anki/issues/450
 // Specifically https://github.com/open-spaced-repetition/fsrs4anki/files/12515294/revlog.csv
-function loadCsvAndTrain(csv: File) {
+function loadCsvAndTrain(csv: File, version: ModelVersion) {
 	console.time('load time')
 	const cids: bigint[] = []
 	const eases: number[] = []
@@ -110,6 +117,7 @@ function loadCsvAndTrain(csv: File) {
 				new Uint8Array(eases),
 				new BigInt64Array(ids),
 				new Uint8Array(types),
+				version,
 			)
 		},
 	})
@@ -125,17 +133,21 @@ function computeParameters(
 	eases: Uint8Array,
 	ids: BigInt64Array,
 	types: Uint8Array,
+	version: ModelVersion,
 ) {
 	let fsrs = new Fsrs()
 	console.time('full training time')
-	// Rust will GC this `progress` struct upon the completion of `computeParametersAnki`.
-	let progress = Progress.new()
+	const progress = Progress.new()
+	// This worker handles one training run. The UI releases its handle after its final read.
+	self.onmessage = ({ data }) => {
+		if (data === 'Release') {
+			progress.free()
+			self.close()
+		}
+	}
 	self.postMessage({
 		tag: 'Start',
 		buffer: initOutput.memory.buffer,
-		// When `progress` is GCed, `pointer()` will point to arbitrary memory.
-		// Therefore no semantics are guaranteed after the completion of `computeParametersAnki`.
-		// Do not read from memory after `Stop` is posted!
 		pointer: progress.pointer(),
 	} satisfies ProgressMessage)
 	// MDN states:
@@ -147,39 +159,30 @@ function computeParameters(
 	let timeZoneMinutesOffset = new Date().getTimezoneOffset() * -1
 	let ankiNextDayStartsAtMinutes = 4 * 60
 	let trainingConfig = new TrainingConfig()
-	let parameters = fsrs.computeParametersAnki(
-		// We subtract ankiNextDayStartsAtMinutes because
-		// we want a review done at, say, 1am to be done for the *prior* day.
-		// Adding would move it into the future.
-		timeZoneMinutesOffset - ankiNextDayStartsAtMinutes,
-		cids,
-		eases,
-		ids,
-		types,
-		progress,
-		true,
-		null,
-		trainingConfig,
-	)
-	self.postMessage({
-		tag: 'Stop',
-		parameters,
-	} satisfies ProgressMessage)
-	console.timeEnd('full training time')
-	console.log('trained parameters are', parameters)
-	console.log('revlog count', cids.length)
-
-	// grep D91EEC72-FCBC-4140-8ADC-9CF2016A56C5
-	// You can *probably* not call `fsrs.free()`.
-	// This is because we use a version of wasm-bindgen that supports WeakRef.
-	// https://github.com/rustwasm/wasm-bindgen/blob/main/guide/src/reference/weak-references.md
-	// Fsrs-browser requires `SharedArrayBuffer`, which in turn requires COOP and COEP.
-	// All browsers supported COOP and COEP at or before supporting WeakRef...
-	// ...with the sole exception of Chrome 83 and Edge 83, released May 18, 2020.
-	// If you care about users on exactly those versions, go ahead and call `.free()`.
-	// I'll demonstrate calling it since this is a reference example.
-	// You must *not* call `progress.free()` since Rust will GC it for you.
-	fsrs.free()
+	let parameters: Float32Array | undefined
+	try {
+		parameters = fsrs.computeParametersAnki(
+			// Count reviews before Anki's next-day boundary toward the previous day.
+			timeZoneMinutesOffset - ankiNextDayStartsAtMinutes,
+			cids,
+			eases,
+			ids,
+			types,
+			progress.clone(),
+			true,
+			null,
+			trainingConfig,
+			version,
+		)
+		console.timeEnd('full training time')
+		console.log('trained parameters are', parameters)
+		console.log('revlog count', cids.length)
+	} finally {
+		self.postMessage({ tag: 'Stop', parameters } satisfies ProgressMessage)
+		// grep D91EEC72-FCBC-4140-8ADC-9CF2016A56C5
+		// WeakRef-capable browsers can reclaim the wrapper, but free() releases it immediately.
+		fsrs.free()
+	}
 }
 
 export type ProgressMessage =
@@ -190,5 +193,5 @@ export type ProgressMessage =
 	  }
 	| {
 			tag: 'Stop'
-			parameters: Float32Array
+			parameters: Float32Array | undefined
 	  }

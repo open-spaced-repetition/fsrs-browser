@@ -5,15 +5,28 @@
   </head>
   <body>
     <h1>FSRS Browser Example</h1>
+    <label>FSRS version
+      <select id="model-version" disabled>
+        <option value="7">FSRS-7</option>
+        <option value="6">FSRS-6</option>
+      </select>
+    </label>
     <button id="memory-state-btn">Calculate Memory State</button>
     <button id="next-interval-btn">Calculate Next Interval</button>
 
     <script type="module">
-      import { default as wasm, Fsrs } from "./pkg/fsrs_browser.js";
+      import { default as wasm, Fsrs, FSRS6_DEFAULT_PARAMETERS, ModelVersion } from "./pkg/fsrs_browser.js";
+      const version = document.getElementById("model-version");
       let fsrs;
       wasm()
-        .then((module) => {
-          fsrs = new Fsrs();
+        .then(() => {
+          function selectModel() {
+            fsrs?.free();
+            fsrs = new Fsrs(Number(version.value) === ModelVersion.Fsrs6 ? FSRS6_DEFAULT_PARAMETERS() : undefined);
+          }
+          selectModel();
+          version.addEventListener("change", selectModel);
+          version.disabled = false;
         })
         .catch((error) => {
           console.error("An error occurred while initializing the WASM module:", error);
@@ -23,7 +36,7 @@
       document.getElementById("memory-state-btn").addEventListener("click", () => {
         if (fsrs) {
           const ratings = new Uint32Array([3, 3, 3]);
-          const delta_ts = new Uint32Array([0, 3, 6]);
+          const delta_ts = new Float32Array([0, 3, 6]);
           const result = fsrs.memoryState(ratings, delta_ts);
           console.log("Memory state:", result);
         }
