@@ -5,7 +5,7 @@ set -eo pipefail # https://stackoverflow.com/a/2871034
 # Add wasm32 target for compiler.
 rustup target add wasm32-unknown-unknown
 
-WASM_PACK_VERSION=0.12.1
+WASM_PACK_VERSION=0.15.1
 if ! command -v wasm-pack &>/dev/null || [[ "$(wasm-pack --version)" != "wasm-pack $WASM_PACK_VERSION" ]]; then
 	echo "Installing wasm-pack $WASM_PACK_VERSION ..."
 	cargo install wasm-pack --version "$WASM_PACK_VERSION" --locked --force
